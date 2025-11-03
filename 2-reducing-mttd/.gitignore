@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Jupyter Notebook outputs (optional - uncomment if you don't want to commit outputs)
+# *.ipynb
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Data files (generated from notebooks)
+# Uncomment the next line if you don't want to commit generated CSV files
+# data/*.csv
+# Keep the prompts directory
+!data/prompts/
+!data/prompts/.gitkeep
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+*.cache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Model files (if any)
+*.pkl
+*.h5
+*.ckpt
+*.pt
+*.pth
+
+# Data directories (keep structure but ignore large files)
+# Uncomment if you want to ignore all data files
+# data/**/*.csv
+# data/**/*.json
+# data/**/*.parquet
+

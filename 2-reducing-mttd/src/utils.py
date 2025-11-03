@@ -83,10 +83,27 @@ def calculate_basic_stats(df: pd.DataFrame) -> Dict:
     """
     stats = {
         'total_incidents': len(df),
-        'incidents': df[df.get('issue/request', pd.Series()).str.contains('Incident', case=False, na=False)].shape[0] if 'issue/request' in df.columns else 0,
-        'requests': df[df.get('issue/request', pd.Series()).str.contains('Request', case=False, na=False)].shape[0] if 'issue/request' in df.columns else 0,
-        'avg_resolution_time': df.get('resolution_time', pd.Series()).mean() if 'resolution_time' in df.columns else None,
-        'categories': df.get('category', pd.Series()).value_counts().to_dict() if 'category' in df.columns else {},
+        'incidents': 0,
+        'requests': 0,
+        'avg_resolution_time': None,
+        'categories': {},
     }
+    
+    # Count incidents vs requests - check both 'type' and 'issue/request' columns
+    if 'type' in df.columns:
+        stats['incidents'] = df[df['type'].str.contains('Incident', case=False, na=False)].shape[0]
+        stats['requests'] = df[df['type'].str.contains('Request', case=False, na=False)].shape[0]
+    elif 'issue/request' in df.columns:
+        stats['incidents'] = df[df['issue/request'].str.contains('Incident', case=False, na=False)].shape[0]
+        stats['requests'] = df[df['issue/request'].str.contains('Request', case=False, na=False)].shape[0]
+    
+    # Calculate average resolution time
+    if 'resolution_time' in df.columns:
+        stats['avg_resolution_time'] = df['resolution_time'].mean()
+    
+    # Get category distribution
+    if 'category' in df.columns:
+        stats['categories'] = df['category'].value_counts().to_dict()
+    
     return stats
 
