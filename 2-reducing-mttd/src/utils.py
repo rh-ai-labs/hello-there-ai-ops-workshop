@@ -145,7 +145,7 @@ def compute_semantic_similarity(text1: str, text2: str, model_name: Optional[str
         text1: First text
         text2: Second text
         model_name: Name of the sentence transformer model to use.
-                   Defaults to 'BAAI/bge-small-en-v1.5' (recommended)
+                   Defaults to 'nomic-ai/nomic-embed-text-v1.5' (fast, high-quality)
         
     Returns:
         Cosine similarity score between 0 and 1
@@ -156,7 +156,7 @@ def compute_semantic_similarity(text1: str, text2: str, model_name: Optional[str
         from sklearn.metrics.pairwise import cosine_similarity
         
         # Use recommended model if not specified
-        default_model = 'BAAI/bge-small-en-v1.5'
+        default_model = 'nomic-ai/nomic-embed-text-v1.5'
         model_name = model_name or os.getenv('EMBEDDING_MODEL', default_model)
         
         model = SentenceTransformer(model_name)
@@ -194,7 +194,7 @@ def find_most_similar_close_note(
         from sklearn.metrics.pairwise import cosine_similarity
         
         # Use model from metadata if available, otherwise use recommended default
-        default_model = 'BAAI/bge-small-en-v1.5'
+        default_model = 'nomic-ai/nomic-embed-text-v1.5'
         model_name = metadata.get('model_name', default_model)
         model = SentenceTransformer(model_name)
         query_embedding = model.encode([query_text])

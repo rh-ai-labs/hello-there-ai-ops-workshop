@@ -23,13 +23,13 @@ class IncidentEnrichmentEvaluator:
         
         Args:
             embedding_model: Name of the sentence transformer model to use.
-                           Defaults to 'BAAI/bge-small-en-v1.5' (recommended)
+                           Defaults to 'nomic-ai/nomic-embed-text-v1.5' (fast, high-quality)
                            or can be set via EMBEDDING_MODEL environment variable.
         """
         self.rouge_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
         
-        # Model selection: Use BGE-small-en-v1.5 for best accuracy/speed balance
-        default_model = 'BAAI/bge-small-en-v1.5'
+        # Model selection: Use Nomic Embed Text for fast, high-quality embeddings
+        default_model = 'nomic-ai/nomic-embed-text-v1.5'
         model_name = embedding_model or os.getenv('EMBEDDING_MODEL', default_model)
         
         try:
