@@ -23,26 +23,43 @@ class IncidentEnrichmentEvaluator:
         
         Args:
             embedding_model: Name of the sentence transformer model to use.
-                           Defaults to 'nomic-ai/nomic-embed-text-v1.5' (fast, high-quality)
+                           Defaults to 'BAAI/bge-m3' (multilingual, multi-granularity)
                            or can be set via EMBEDDING_MODEL environment variable.
         """
         self.rouge_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
         
-        # Model selection: Use Nomic Embed Text for fast, high-quality embeddings
-        default_model = 'nomic-ai/nomic-embed-text-v1.5'
+        # Model selection: Use BGE-M3 for multilingual, multi-granularity support
+        default_model = 'BAAI/bge-m3'
         model_name = embedding_model or os.getenv('EMBEDDING_MODEL', default_model)
         
         try:
-            self.sentence_model = SentenceTransformer(model_name)
+            # Try sentence-transformers first
+            self.sentence_model = SentenceTransformer(model_name, trust_remote_code=True)
             print(f"Loaded embedding model: {model_name}")
         except Exception as e:
-            print(f"Warning: Could not load sentence transformer model: {e}")
-            print(f"Falling back to default: {default_model}")
+            print(f"Warning: Could not load with sentence-transformers: {e}")
+            print("Trying FlagEmbedding library...")
             try:
-                self.sentence_model = SentenceTransformer(default_model)
+                from FlagEmbedding import BGEM3FlagModel
+                self.sentence_model = BGEM3FlagModel(model_name)
+                self._use_flag_embedding = True
+                print(f"Loaded embedding model via FlagEmbedding: {model_name}")
+            except ImportError:
+                print("FlagEmbedding not installed. Install with: pip install FlagEmbedding")
+                print(f"Falling back to: {default_model}")
+                try:
+                    self.sentence_model = SentenceTransformer(default_model, trust_remote_code=True)
+                    self._use_flag_embedding = False
+                except Exception as e2:
+                    print(f"Error loading default model: {e2}")
+                    self.sentence_model = None
+                    self._use_flag_embedding = False
             except Exception as e2:
-                print(f"Error loading default model: {e2}")
+                print(f"Error loading with FlagEmbedding: {e2}")
                 self.sentence_model = None
+                self._use_flag_embedding = False
+        else:
+            self._use_flag_embedding = False
     
     def evaluate_with_ground_truth(
         self, 
@@ -70,8 +87,15 @@ class IncidentEnrichmentEvaluator:
         # Semantic similarity (if model available)
         if self.sentence_model:
             try:
-                gen_embedding = self.sentence_model.encode([generated])
-                gt_embedding = self.sentence_model.encode([ground_truth])
+                if hasattr(self, '_use_flag_embedding') and self._use_flag_embedding:
+                    # FlagEmbedding returns dict with 'dense_vecs', 'sparse', 'colbert_vecs'
+                    gen_output = self.sentence_model.encode([generated], return_dense=True, return_sparse=False, return_colbert_vecs=False)
+                    gt_output = self.sentence_model.encode([ground_truth], return_dense=True, return_sparse=False, return_colbert_vecs=False)
+                    gen_embedding = gen_output['dense_vecs']
+                    gt_embedding = gt_output['dense_vecs']
+                else:
+                    gen_embedding = self.sentence_model.encode([generated])
+                    gt_embedding = self.sentence_model.encode([ground_truth])
                 similarity = cosine_similarity(gen_embedding, gt_embedding)[0][0]
                 metrics['semantic_similarity'] = float(similarity)
             except Exception as e:

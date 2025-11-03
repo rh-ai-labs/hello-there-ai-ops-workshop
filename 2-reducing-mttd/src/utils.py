@@ -145,7 +145,7 @@ def compute_semantic_similarity(text1: str, text2: str, model_name: Optional[str
         text1: First text
         text2: Second text
         model_name: Name of the sentence transformer model to use.
-                   Defaults to 'nomic-ai/nomic-embed-text-v1.5' (fast, high-quality)
+                   Defaults to 'BAAI/bge-m3' (multilingual, multi-granularity)
         
     Returns:
         Cosine similarity score between 0 and 1
@@ -156,11 +156,19 @@ def compute_semantic_similarity(text1: str, text2: str, model_name: Optional[str
         from sklearn.metrics.pairwise import cosine_similarity
         
         # Use recommended model if not specified
-        default_model = 'nomic-ai/nomic-embed-text-v1.5'
+        default_model = 'BAAI/bge-m3'
         model_name = model_name or os.getenv('EMBEDDING_MODEL', default_model)
         
-        model = SentenceTransformer(model_name)
-        embeddings = model.encode([text1, text2])
+        try:
+            model = SentenceTransformer(model_name, trust_remote_code=True)
+            embeddings = model.encode([text1, text2])
+        except Exception:
+            # Try FlagEmbedding if sentence-transformers fails
+            from FlagEmbedding import BGEM3FlagModel
+            model = BGEM3FlagModel(model_name)
+            output1 = model.encode([text1], return_dense=True, return_sparse=False, return_colbert_vecs=False)
+            output2 = model.encode([text2], return_dense=True, return_sparse=False, return_colbert_vecs=False)
+            embeddings = [output1['dense_vecs'][0], output2['dense_vecs'][0]]
         similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
         return float(similarity)
     except ImportError:
@@ -194,10 +202,18 @@ def find_most_similar_close_note(
         from sklearn.metrics.pairwise import cosine_similarity
         
         # Use model from metadata if available, otherwise use recommended default
-        default_model = 'nomic-ai/nomic-embed-text-v1.5'
+        default_model = 'BAAI/bge-m3'
         model_name = metadata.get('model_name', default_model)
-        model = SentenceTransformer(model_name)
-        query_embedding = model.encode([query_text])
+        
+        try:
+            model = SentenceTransformer(model_name, trust_remote_code=True)
+            query_embedding = model.encode([query_text])
+        except Exception:
+            # Try FlagEmbedding if sentence-transformers fails
+            from FlagEmbedding import BGEM3FlagModel
+            model = BGEM3FlagModel(model_name)
+            output = model.encode([query_text], return_dense=True, return_sparse=False, return_colbert_vecs=False)
+            query_embedding = output['dense_vecs']
         
         # Compute similarities
         similarities = cosine_similarity(query_embedding, embeddings)[0]
