@@ -56,11 +56,8 @@ mlruns/
 mlartifacts/
 
 # Data files (generated from notebooks)
-# Uncomment the next line if you don't want to commit generated CSV files
-# data/*.csv
-# Keep the prompts directory
-!data/prompts/
-!data/prompts/.gitkeep
+# All data directory contents are ignored (CSV, embeddings, etc.)
+data/
 
 # Temporary files
 *.tmp

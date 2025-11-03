@@ -137,21 +137,27 @@ def load_ground_truth_embeddings(data_dir: str = "data") -> Tuple[np.ndarray, Di
     return embeddings, metadata
 
 
-def compute_semantic_similarity(text1: str, text2: str, model_name: str = 'all-MiniLM-L6-v2') -> float:
+def compute_semantic_similarity(text1: str, text2: str, model_name: Optional[str] = None) -> float:
     """
     Compute semantic similarity between two texts using sentence embeddings.
     
     Args:
         text1: First text
         text2: Second text
-        model_name: Name of the sentence transformer model to use
+        model_name: Name of the sentence transformer model to use.
+                   Defaults to 'BAAI/bge-small-en-v1.5' (recommended)
         
     Returns:
         Cosine similarity score between 0 and 1
     """
     try:
+        import os
         from sentence_transformers import SentenceTransformer
         from sklearn.metrics.pairwise import cosine_similarity
+        
+        # Use recommended model if not specified
+        default_model = 'BAAI/bge-small-en-v1.5'
+        model_name = model_name or os.getenv('EMBEDDING_MODEL', default_model)
         
         model = SentenceTransformer(model_name)
         embeddings = model.encode([text1, text2])
@@ -187,7 +193,10 @@ def find_most_similar_close_note(
         from sentence_transformers import SentenceTransformer
         from sklearn.metrics.pairwise import cosine_similarity
         
-        model = SentenceTransformer(metadata.get('model_name', 'all-MiniLM-L6-v2'))
+        # Use model from metadata if available, otherwise use recommended default
+        default_model = 'BAAI/bge-small-en-v1.5'
+        model_name = metadata.get('model_name', default_model)
+        model = SentenceTransformer(model_name)
         query_embedding = model.encode([query_text])
         
         # Compute similarities

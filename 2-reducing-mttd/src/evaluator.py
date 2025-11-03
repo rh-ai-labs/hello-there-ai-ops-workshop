@@ -4,6 +4,7 @@ Evaluation functions for LLM-generated incident enrichments.
 
 import json
 import re
+import os
 from typing import Dict, List, Optional, Tuple
 import numpy as np
 from rouge_score import rouge_scorer
@@ -16,14 +17,32 @@ class IncidentEnrichmentEvaluator:
     Evaluator for assessing quality of LLM-generated incident enrichments.
     """
     
-    def __init__(self):
-        """Initialize the evaluator with required models."""
+    def __init__(self, embedding_model: Optional[str] = None):
+        """
+        Initialize the evaluator with required models.
+        
+        Args:
+            embedding_model: Name of the sentence transformer model to use.
+                           Defaults to 'BAAI/bge-small-en-v1.5' (recommended)
+                           or can be set via EMBEDDING_MODEL environment variable.
+        """
         self.rouge_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+        
+        # Model selection: Use BGE-small-en-v1.5 for best accuracy/speed balance
+        default_model = 'BAAI/bge-small-en-v1.5'
+        model_name = embedding_model or os.getenv('EMBEDDING_MODEL', default_model)
+        
         try:
-            self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
+            self.sentence_model = SentenceTransformer(model_name)
+            print(f"Loaded embedding model: {model_name}")
         except Exception as e:
             print(f"Warning: Could not load sentence transformer model: {e}")
-            self.sentence_model = None
+            print(f"Falling back to default: {default_model}")
+            try:
+                self.sentence_model = SentenceTransformer(default_model)
+            except Exception as e2:
+                print(f"Error loading default model: {e2}")
+                self.sentence_model = None
     
     def evaluate_with_ground_truth(
         self, 
