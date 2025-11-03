@@ -1,0 +1,33 @@
+# Core dependencies
+pandas>=2.0.0
+numpy>=1.24.0
+jupyter>=1.0.0
+notebook>=7.0.0
+
+# Hugging Face and datasets
+datasets>=2.14.0
+transformers>=4.30.0
+sentence-transformers>=2.2.0
+
+# LangChain and LLM integration
+langchain>=0.1.0
+langchain-community>=0.0.20
+
+# MLflow for experiment tracking
+mlflow>=2.8.0
+
+# Evaluation metrics
+rouge-score>=0.1.2
+nltk>=3.8.0
+scikit-learn>=1.3.0
+
+# TrustyAI (Red Hat AI Services)
+# trustyai>=0.3.0  # Uncomment when available in your environment
+
+# Optional: Langfuse for LLM observability
+# langfuse>=2.0.0  # Uncomment if using Langfuse
+
+# Utilities
+python-dotenv>=1.0.0
+tqdm>=4.65.0
+
