@@ -1,7 +1,7 @@
 # 📊 Project Status Document
 
 **Project:** AI Test Drive – Cenário 2: Enriquecendo Incidentes com IA  
-**Last Updated:** December 2024  
+**Last Updated:** November 2025  
 **Status:** 🟡 In Progress
 
 ---
@@ -25,6 +25,9 @@
 - `prepare_incident_for_enrichment()` - Prepares incident data for LLM prompts
 - `calculate_basic_stats()` - Computes dataset statistics
 - `save_enriched_results()` - Saves results to CSV
+- `load_ground_truth_embeddings()` - Loads pre-computed embeddings for ground truth
+- `compute_semantic_similarity()` - Computes semantic similarity between two texts
+- `find_most_similar_close_note()` - Finds most semantically similar close notes
 
 #### ✅ `prompts.py` - Prompt Templates
 - `get_base_enrichment_prompt()` - Basic enrichment prompt
@@ -40,6 +43,8 @@
   - `evaluate_specificity()` - Measures specificity (avoids vague statements)
   - `evaluate_actionability()` - Assesses actionability of resolution steps
   - `comprehensive_evaluation()` - Combines all metrics into overall quality score
+  - **Embedding Model:** Uses `BAAI/bge-m3` with FlagEmbedding fallback support
+  - Supports multilingual, multi-granularity embeddings (100+ languages, up to 8,192 tokens)
 
 #### ✅ `mlflow_tracking.py` - Experiment Tracking
 - `setup_mlflow()` - Configures MLflow experiment
@@ -61,6 +66,19 @@ Comprehensive data exploration notebook with:
 - Data preparation for experiments
 - Saves prepared datasets (`incidents_prepared.csv`, `incidents_sample.csv`)
 
+#### ✅ `02_create_ground_truth.ipynb` - **COMPLETE**
+Ground truth dataset creation notebook with:
+- High-quality close notes filtering (info_score ≥ 0.8, poor_score ≤ 0.1)
+- Generic phrase exclusion
+- Balanced sampling across categories
+- Ground truth dataset creation (`gt_close_notes.csv`)
+- **Semantic Embeddings Analysis:**
+  - Embedding generation using BGE-M3 model
+  - Semantic similarity analysis within and between categories
+  - t-SNE visualization for cluster analysis
+  - Embeddings saved for future evaluation (`gt_close_notes_embeddings.npy`)
+  - Metadata tracking (`gt_close_notes_embeddings_metadata.pkl`)
+
 ### 4. Dataset Understanding
 - ✅ Dataset loaded and explored
 - ✅ Understanding of actual columns:
@@ -70,41 +88,52 @@ Comprehensive data exploration notebook with:
   - Contact types: Email, Chat, Phone, Self-service
   - Types: Incident, Request
 
+### 5. Ground Truth Dataset ✅ **COMPLETE**
+- ✅ **Ground truth dataset created** (`data/gt_close_notes.csv`)
+  - High-quality close notes filtered and validated
+  - Balanced sampling across categories
+  - 26 high-quality reference examples with metadata
+- ✅ **Semantic embeddings generated**
+  - Model: `BAAI/bge-m3` (multilingual, multi-granularity)
+  - Semantic similarity analysis implemented
+  - t-SNE visualization for cluster exploration
+  - Embeddings saved for evaluation pipeline
+- ✅ **Embedding utilities**
+  - Support for FlagEmbedding fallback
+  - Functions for loading and using pre-computed embeddings
+  - Semantic similarity computation functions
+
 ---
 
 ## 🚧 Next Steps - Implementation Roadmap
 
-### 🎯 Phase 1: Ground Truth Creation
+### 🎯 Phase 1: Ground Truth Creation ✅ **COMPLETE**
 
-#### 📋 Step 1: Criar o Ground Truth de `close_notes`
+#### ✅ Step 1: Criar o Ground Truth de `close_notes` - **COMPLETED**
 
-**Objetivo:** Estabelecer um conjunto de respostas consideradas "boas" — ou seja, notas de fechamento ideais que servirão como referência (verdade padrão) para avaliar o desempenho dos modelos.
+**Status:** ✅ Implementado e concluído
 
-**Como fazer:**
+**Entregas:**
+- ✅ Notebook `02_create_ground_truth.ipynb` criado e funcional
+- ✅ Ground truth dataset `data/gt_close_notes.csv` criado (26 exemplos de alta qualidade)
+- ✅ Embeddings semânticos gerados usando BGE-M3
+- ✅ Análise de similaridade semântica implementada
+- ✅ Visualização t-SNE para exploração de clusters
+- ✅ Arquivos de embeddings salvos para uso futuro:
+  - `data/gt_close_notes_embeddings.npy` (embeddings array)
+  - `data/gt_close_notes_embeddings_metadata.pkl` (metadados)
 
-1. **Selecionar registros de alta qualidade:**
-   - Usar o dataset base (`synthetic-it-callcenter-tickets`)
-   - Filtrar apenas registros com:
-     - `close_notes` bem preenchido (textos completos e informativos)
-     - `info_score_close_notes` alto (≥ 0.8)
-     - `info_score_poor_close_notes` baixo (≤ 0.1)
-     - Ausência de rótulos genéricos como "No changes noted." ou "Issue resolved"
+**Características do Dataset:**
+- Filtros aplicados: `info_score_close_notes` ≥ 0.8, `info_score_poor_close_notes` ≤ 0.1
+- Exclusão de frases genéricas
+- Amostragem balanceada por categoria
+- Metadados incluídos: category, subcategory, contact_type, info_score
 
-2. **Garantir diversidade temática:**
-   - Amostrar exemplos equilibrados entre diferentes categorias e subcategorias
-   - Incluir exemplos de Software, Hardware, Network, Account, etc.
-   - Variar por tipo de contato (Email, Chat, Phone, Self-service)
-
-3. **Criar arquivo de referência:**
-   - Salvar como `data/gt_close_notes.csv`
-   - Estrutura mínima:
-     - `number` (ID do ticket)
-     - `content` (descrição original do incidente)
-     - `close_notes_ref` (texto de referência)
-
-**Deliverable:** `data/gt_close_notes.csv` com exemplos de alta qualidade para comparação
-
-**Notebook:** Criar `notebooks/02_create_ground_truth.ipynb`
+**Modelo de Embedding:**
+- Modelo: `BAAI/bge-m3`
+- Suporte multilíngue (100+ idiomas)
+- Multi-granularidade (frases a documentos longos)
+- Fallback para FlagEmbedding se necessário
 
 ---
 
