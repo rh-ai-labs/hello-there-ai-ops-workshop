@@ -1,7 +1,7 @@
 # 📊 Project Status Document
 
 **Project:** AI Test Drive – Cenário 2: Enriquecendo Incidentes com IA  
-**Last Updated:** December 2024 (Notebook 02 & 03 refactored)  
+**Last Updated:** December 2024 (Notebook 04 complete)  
 **Status:** 🟡 In Progress
 
 ---
@@ -16,7 +16,7 @@
 1. **Notebook 01** - Data Loading and Exploration ✅
 2. **Notebook 02** - Ground Truth Creation ✅
 3. **Notebook 03** - N-gram Baseline Analysis ✅
-4. **Notebook 04** - Embeddings and Semantics Analysis 🔴
+4. **Notebook 04** - Embeddings and Semantics Analysis ✅
 5. **Notebook 05** - LLM-as-a-Judge Evaluation 🔴
 6. **Notebook 06** - LLM Generation and Evaluation 🔴
 
@@ -149,49 +149,57 @@
 
 ### 🔴 Critical Path (Must Have)
 
-#### 📋 Notebook 04: Embeddings and Semantics Analysis
+#### ✅ Notebook 04: Embeddings and Semantics Analysis - **COMPLETE**
 
 **Objective:** Analyze semantic similarity between close notes using embeddings to understand how meaning relates to quality.
 
-**Status:** 🔴 **TO DO**
+**Status:** ✅ **COMPLETE**
 
-**What it needs to do:**
-1. **Generate embeddings** - Create semantic embeddings for:
+**What it does:**
+1. **Generate embeddings** - Creates semantic embeddings for:
    - Reference dataset close notes (good examples)
    - Other incidents close notes (bad/regular examples)
-   - Use embedding model (e.g., BGE-M3, Sentence-Transformers)
+   - Uses BGE-M3 embedding model (BAAI/bge-m3) via Sentence-Transformers
 
-2. **Compare semantic similarity** - For each close note:
-   - Compare with reference close notes (same category/similar incidents)
-   - Calculate cosine similarity scores
-   - Analyze if good close notes cluster together semantically
+2. **Compare semantic similarity** - Calculates:
+   - Within-group similarity (good vs good, bad vs bad)
+   - Between-group similarity (good vs bad)
+   - Category-aware similarity analysis (within same category)
 
-3. **Visualize and analyze** - Create visualizations:
-   - t-SNE or PCA plots showing semantic space
-   - Similarity heatmaps
-   - Distribution analysis of similarity scores
+3. **Visualize and analyze** - Creates visualizations:
+   - t-SNE plots showing semantic space with category color-coding
+   - Quality distinction via marker shapes (circles = good, squares = bad/regular)
+   - Category breakdown summary
 
-4. **Validate quality scores** - Check if:
-   - Good close notes (high quality scores) are semantically closer to references
-   - Bad close notes (low quality scores) are further from references
-   - Semantic similarity correlates with quality
+4. **Validate quality scores** - Analyzes:
+   - Whether good close notes cluster together semantically
+   - Whether semantic similarity can distinguish quality
+   - Category-specific patterns
 
 **Deliverables:**
-- Notebook `notebooks/04_semantics_analysis.ipynb`
-- Embeddings for all close notes
-- Semantic similarity analysis results
-- Visualizations showing semantic relationships
+- ✅ Notebook `notebooks/04_semantics_analysis.ipynb` - **COMPLETE**
+- ✅ Embeddings for all close notes - **GENERATED**
+- ✅ Semantic similarity analysis results - **COMPLETE**
+- ✅ Visualizations showing semantic relationships - **COMPLETE**
+- ✅ Category-aware visualization with color-coding - **COMPLETE**
+
+**Key Features:**
+- Educational explanations of embeddings and semantic similarity
+- Category color-coding in t-SNE visualization
+- Quality distinction via marker shapes (○ circles = good, □ squares = bad/regular)
+- Category breakdown summary showing distribution
+- Analysis of alternative embedding models and strategies
 
 **Dependencies:**
 - ✅ `data/reference_close_notes.csv` - **COMPLETE**
 - ✅ `data/other_incidents.csv` - **COMPLETE**
 - ✅ Embedding models (BGE-M3, Sentence-Transformers) - **AVAILABLE**
 
-**Non-functional requirements:**
-- Explain what embeddings and semantic similarity mean in simple terms
-- Show how embeddings capture meaning (not just words)
-- Explain why semantic similarity matters for evaluation
-- Provide interpretation guides for similarity scores
+**Non-functional requirements:** ✅ **MET**
+- ✅ Explains embeddings and semantic similarity in simple terms
+- ✅ Shows how embeddings capture meaning (not just words)
+- ✅ Explains why semantic similarity matters for evaluation
+- ✅ Provides interpretation guides for similarity scores and visualizations
 
 ---
 
@@ -225,7 +233,7 @@
 
 **Dependencies:**
 - ✅ `data/reference_close_notes.csv` - **COMPLETE**
-- ✅ Notebook 04 (Semantics Analysis) - **NEEDED** (for finding similar references)
+- ✅ Notebook 04 (Semantics Analysis) - **COMPLETE** (for finding similar references)
 - 🔴 LLM integration (Ollama or other provider) - **NEEDED**
 - 🔴 LLM Client implementation - **NEEDED**
 
@@ -270,8 +278,8 @@
 
 **Dependencies:**
 - ✅ `data/reference_close_notes.csv` - **COMPLETE**
-- ✅ Notebook 04 (Semantics Analysis) - **NEEDED** (for semantic evaluation)
-- ✅ Notebook 05 (LLM-as-a-Judge) - **NEEDED** (for structured evaluation)
+- ✅ Notebook 04 (Semantics Analysis) - **COMPLETE** (for semantic evaluation)
+- 🔴 Notebook 05 (LLM-as-a-Judge) - **NEEDED** (for structured evaluation)
 - 🔴 LLM Client implementation - **NEEDED**
 
 **Non-functional requirements:**
@@ -320,10 +328,10 @@ At the end of implementation, participants will have:
 
 1. ✅ **Ground truth dataset** (`data/reference_close_notes.csv`) - **COMPLETE**
 2. ✅ **N-gram baseline analysis** (Notebook 03) - **COMPLETE**
-3. 🔴 **Semantics analysis** (Notebook 04) - **TO DO**
-   - Generate embeddings for all close notes
-   - Analyze semantic similarity between good and bad close notes
-   - Visualize semantic relationships
+3. ✅ **Semantics analysis** (Notebook 04) - **COMPLETE**
+   - ✅ Generate embeddings for all close notes
+   - ✅ Analyze semantic similarity between good and bad close notes
+   - ✅ Visualize semantic relationships with category color-coding
 4. 🔴 **LLM-as-a-Judge evaluation** (Notebook 05) - **TO DO**
    - Structured evaluation with 6 criteria (0-5 scores)
    - Comparison: existing close notes vs ground truth
@@ -406,7 +414,7 @@ At the end of implementation, participants will have:
 - [x] Project status refactored (removed unused tools, aligned with workflow)
 
 ### 🔴 In Progress / Next
-- [ ] Notebook 04: Embeddings and Semantics Analysis
+- [x] Notebook 04: Embeddings and Semantics Analysis ✅
 - [ ] Notebook 05: LLM-as-a-Judge evaluation
 - [ ] Notebook 06: LLM generation and evaluation
 - [ ] LLM Client implementation (`src/llm_client.py`)
@@ -435,7 +443,7 @@ At the end of implementation, participants will have:
 
 **Document Status:** ✅ Updated  
 **Last Review:** December 2024  
-**Next Review:** After Notebook 04 completion
+**Next Review:** After Notebook 05 completion
 
 ---
 
@@ -458,6 +466,18 @@ At the end of implementation, participants will have:
 - ✅ Updated visualization labels: "Reference (Good)" vs "Other Incidents (Bad)"
 - ✅ Updated conclusion logic: Compares score differences to validate hypothesis
 - ✅ Fixed dataset filename reference (`gt_close_notes.csv` → `reference_close_notes.csv`)
+
+### Notebook 04 Completion
+- ✅ Created comprehensive embeddings and semantics analysis notebook
+- ✅ Generates embeddings for all close notes using BGE-M3 model
+- ✅ Calculates semantic similarity (within-group and between-group)
+- ✅ Category-aware similarity analysis
+- ✅ t-SNE visualization with category color-coding
+- ✅ Quality distinction via marker shapes (○ circles = good, □ squares = bad/regular)
+- ✅ Category breakdown summary
+- ✅ Educational content explaining embeddings and semantic similarity
+- ✅ Analysis of alternative embedding models and strategies
+- ✅ Complete documentation and interpretation guides
 
 ### Documentation Updates
 - ✅ Created `WORKFLOW.md` - Simple workflow summary
