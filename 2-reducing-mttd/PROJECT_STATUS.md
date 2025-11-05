@@ -1,7 +1,7 @@
 # 📊 Project Status Document
 
 **Project:** AI Test Drive – Cenário 2: Enriquecendo Incidentes com IA  
-**Last Updated:** December 2024  
+**Last Updated:** December 2024 (Notebook 02 & 03 refactored)  
 **Status:** 🟡 In Progress
 
 ---
@@ -96,19 +96,29 @@
 **Status:** ✅ Complete and ready
 
 **What it does:**
-- Defines quality criteria for "good" close notes
+- Defines quality criteria for "good" close notes (with examples)
 - Filters high-quality close notes (info_score ≥ 0.8, poor_score ≤ 0.1)
 - Excludes generic phrases
 - Creates ground truth dataset with balanced sampling
+- **Separates dataset into two groups:**
+  - Reference Dataset (high-quality examples)
+  - Other Incidents Dataset (remaining incidents for comparison)
+- **Optional embeddings generation:** Processes ALL incidents to validate quality scores
+- **Validation:** Checks if incidents with similar quality scores are semantically closer
 
 **Outputs:**
-- `reference_close_notes.csv` - Reference dataset (26 high-quality examples)
-- `gt_close_notes_embeddings.npy` - Semantic embeddings (optional)
-- `gt_close_notes_embeddings_metadata.pkl` - Embedding metadata
+- `reference_close_notes.csv` - Reference dataset (high-quality examples)
+- `other_incidents.csv` - Other incidents dataset (remaining incidents)
+- `gt_close_notes_embeddings.npy` - Semantic embeddings for all incidents (optional)
+- `gt_close_notes_embeddings_metadata.pkl` - Embedding metadata (optional)
 
-**Audience considerations:** ✅ Educational explanations included
+**Key Features:**
+- ✅ Extensive educational content explaining each step
+- ✅ Clear separation of good vs remaining samples
+- ✅ Semantic validation of quality scores
+- ✅ t-SNE visualization showing all incidents colored by quality score
 
-**Note:** ⚠️ May need simplification review for non-technical audience
+**Audience considerations:** ✅ Complete educational explanations included, ready for non-technical audience
 
 ---
 
@@ -116,18 +126,21 @@
 **Status:** ✅ Complete and ready
 
 **What it does:**
-- Creates pairs from same incident: (content, close_notes)
-- Compares Ground Truth pairs vs Incidents pairs using n-gram metrics
-- Tests hypothesis: Do incident descriptions and close notes use different language?
-- Visualizes comparison between datasets
+- Creates pairs from same incident: (content, close_notes) for both datasets
+- Compares Reference Dataset (good close notes) vs Other Incidents Dataset (bad/regular close notes) using n-gram metrics
+- **Tests hypothesis:** Can n-grams distinguish between good and bad close notes?
+- Visualizes comparison between good and bad close notes
 
 **Outputs:**
 - `ngram_comparison_results.csv` - Comparison results
-- Visualizations comparing both datasets
+- Visualizations comparing good vs bad close notes
 
 **Audience considerations:** ✅ Extensive educational content, concept explanations
 
-**Hypothesis Test:** Confirms n-grams are not suitable → proceed to LLM-as-a-Judge
+**Hypothesis Test:** 
+- **Hypothesis:** N-grams are NOT useful for evaluating/differentiating between good and bad close notes
+- **Test:** Compare n-gram scores from reference (good) vs other incidents (bad)
+- **Expected:** If scores are similar, confirms n-grams cannot distinguish quality → proceed to LLM-as-a-Judge
 
 ---
 
@@ -297,16 +310,21 @@ At the end of implementation, participants will have:
 
 ### Data Structure
 - **`content`** = Original incident description (input)
-- **`close_notes`** = Existing close notes in dataset
-- **`close_notes_ref`** = High-quality reference close notes (ground truth)
+- **`close_notes`** = Existing close notes in dataset (in `other_incidents.csv`)
+- **`close_notes_ref`** = High-quality reference close notes (in `reference_close_notes.csv`)
 - **LLM Output** = Generated close notes from incident descriptions
+
+### Datasets Created
+- **`reference_close_notes.csv`** - High-quality close notes (good samples) for evaluation
+- **`other_incidents.csv`** - Remaining incidents (for comparison in Notebook 03)
 
 ### Evaluation Strategy
 
 **Baseline (Notebook 03):**
-- N-gram comparison: Tests if word overlap is useful
-- Result: Low scores confirm n-grams aren't suitable
-- Conclusion: Need semantic evaluation (LLM-as-a-Judge)
+- N-gram comparison: Tests if n-grams can distinguish good from bad close notes
+- Method: Compare n-gram scores from reference dataset (good) vs other incidents dataset (bad)
+- Result: If scores are similar, confirms n-grams cannot distinguish quality
+- Conclusion: Need semantic evaluation (LLM-as-a-Judge) which can evaluate meaning and quality
 
 **Main Evaluation (Notebook 04):**
 - LLM-as-a-Judge: Structured evaluation with 6 criteria
@@ -324,9 +342,10 @@ At the end of implementation, participants will have:
 
 ### ✅ Completed
 - [x] Notebook 01: Data exploration
-- [x] Notebook 02: Ground truth creation
+- [x] Notebook 02: Ground truth creation (refactored with educational content, saves two datasets, validates quality scores)
 - [x] Notebook 03: N-gram baseline analysis
 - [x] Workflow documentation (`WORKFLOW.md`)
+- [x] Project status refactored (removed unused tools, aligned with workflow)
 
 ### 🔴 In Progress / Next
 - [ ] Notebook 04: LLM-as-a-Judge evaluation
@@ -358,3 +377,30 @@ At the end of implementation, participants will have:
 **Document Status:** ✅ Updated  
 **Last Review:** December 2024  
 **Next Review:** After Notebook 04 completion
+
+---
+
+## 📝 Recent Updates (December 2024)
+
+### Notebook 02 Refactoring
+- ✅ Added extensive educational content for non-technical audience
+- ✅ Clarified dataset separation (Reference vs Other Incidents)
+- ✅ Now saves two CSV files: `reference_close_notes.csv` and `other_incidents.csv`
+- ✅ Updated embeddings to process ALL incidents (not just reference)
+- ✅ Added validation: checks if similar quality scores = semantic similarity
+- ✅ Updated t-SNE visualization to show all incidents with quality scores
+- ✅ Fixed indentation errors in embeddings section
+- ✅ All variable references updated (`gt_final` → `reference_final`)
+
+### Notebook 03 Refactoring
+- ✅ Updated hypothesis: Now tests if n-grams can distinguish good from bad close notes (not testing if descriptions vs close notes use different language)
+- ✅ Clarified comparison: Reference Dataset (good) vs Other Incidents Dataset (bad)
+- ✅ Updated interpretation: Focus on similarity of scores between good and bad (not just low scores)
+- ✅ Updated visualization labels: "Reference (Good)" vs "Other Incidents (Bad)"
+- ✅ Updated conclusion logic: Compares score differences to validate hypothesis
+- ✅ Fixed dataset filename reference (`gt_close_notes.csv` → `reference_close_notes.csv`)
+
+### Documentation Updates
+- ✅ Created `WORKFLOW.md` - Simple workflow summary
+- ✅ Refactored `PROJECT_STATUS.md` - Removed unused tools (Langfuse, MLflow, Llama Stack)
+- ✅ Updated all filename references (`gt_close_notes.csv` → `reference_close_notes.csv`)
