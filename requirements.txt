@@ -30,10 +30,7 @@ unitxt>=1.0.0  # Standardized evaluation framework
 # Optional: Langfuse for LLM observability
 # langfuse>=2.0.0  # Uncomment if using Langfuse
 
-# Unitxt for evaluation (Phase 2) - Replaces Llama Stack
-# unitxt>=1.0.0  # Added above in Evaluation metrics section
-
-# Llama Stack for evaluation APIs (Phase 2) - DEPRECATED: Replaced by Unitxt
+# Llama Stack for evaluation APIs - DEPRECATED: Replaced by Unitxt
 # llama-stack>=0.1.0
 # opentelemetry-api>=1.20.0
 # opentelemetry-sdk>=1.20.0

@@ -1,0 +1,88 @@
+[project]
+name = "ai-workshop-reducing-mttd"
+version = "0.1.0"
+description = "AI Test Drive - Cenário 2: Enriquecendo Incidentes com IA"
+requires-python = ">=3.12"
+dependencies = [
+    # Core dependencies
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "jupyter>=1.0.0",
+    "notebook>=7.0.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    # Hugging Face and datasets
+    "datasets>=2.14.0",
+    "transformers>=4.30.0",
+    "sentence-transformers>=2.2.0",
+    # LangChain and LLM integration
+    "langchain>=0.1.0",
+    "langchain-community>=0.0.20",
+    # MLflow for experiment tracking
+    "mlflow>=2.8.0",
+    # Evaluation metrics
+    "rouge-score>=0.1.2",
+    "nltk>=3.8.0",
+    "scikit-learn>=1.3.0",
+    "unitxt>=1.0.0", # Standardized evaluation framework
+    # Llama Stack for evaluation APIs (Phase 2) - DEPRECATED: Replaced by Unitxt
+    # "llama-stack>=0.3.0",
+    # "opentelemetry-api>=1.20.0",
+    # "opentelemetry-sdk>=1.20.0",
+    # "opentelemetry-exporter-otlp-proto-http>=1.20.0",
+    # Ollama client for local LLM serving
+    "ollama>=0.1.0",
+    # HTTP client for API requests
+    "requests>=2.31.0",
+    # Llama Stack optional provider dependencies - DEPRECATED: Replaced by Unitxt
+    # These were required because llama-stack starter distribution initializes all providers
+    # LLM Provider SDKs
+    # "together>=1.5.30",              # Together AI
+    # "boto3>=1.40.65",                # AWS Bedrock (includes botocore)
+    # "anthropic>=0.72.0",             # Anthropic Claude
+    # "openai>=2.7.1",                 # OpenAI
+    # "google-generativeai>=0.8.5",    # Google Gemini
+    # "fireworks-ai>=0.19.20",         # Fireworks AI
+    # "groq>=0.33.0",                  # Groq
+    # "sambanova>=1.1.5",             # SambaNova
+    # Vector Store Providers
+    # "faiss-cpu>=1.12.0",             # FAISS vector store (use faiss-gpu for GPU)
+    # "sqlite-vec>=0.1.6",             # SQLite vector store
+    # Tool Runtime Providers
+    # "mcp>=1.20.0",                   # Model Context Protocol
+    # Evaluation Providers
+    # "autoevals>=0.0.130",            # AutoEvals evaluation library
+    # Utilities
+    "python-dotenv>=1.0.0",
+    "tqdm>=4.65.0",
+    "nbstripout>=0.6.0",
+]
+
+[project.optional-dependencies]
+# Note: trustyai is currently incompatible with pandas>=2.0.0
+# trustyai requires pandas<1.6, but this project uses pandas>=2.0.0
+# If you need trustyai, you'll need to use pandas 1.5.x or wait for trustyai to support pandas 2.0+
+# trustyai = [
+#     "trustyai>=0.3.0",
+# ]
+langfuse = [
+    "langfuse>=2.0.0",  # Optional: Langfuse for LLM observability
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["2-reducing-mttd/src"]
+
+# Make the src directory importable
+[tool.hatch.build.targets.wheel.shared-data]
+"2-reducing-mttd/src" = "src"
+
+[tool.uv]
+dev-dependencies = []
+
+[tool.uv.sources]
+# If you need to specify custom sources for packages, add them here
+
