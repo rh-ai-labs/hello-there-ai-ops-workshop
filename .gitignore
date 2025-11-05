@@ -81,6 +81,13 @@ Thumbs.db
 *.pt
 *.pth
 
+# Unitxt / LLM inference engine cache
+inference_engine_cache/
+**/inference_engine_cache/
+*.db
+*.db-shm
+*.db-wal
+
 # Data directories (keep structure but ignore large files)
 # Uncomment if you want to ignore all data files
 # data/**/*.csv

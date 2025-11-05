@@ -1,7 +1,7 @@
 # 📊 Project Status Document
 
 **Project:** AI Test Drive – Cenário 2: Enriquecendo Incidentes com IA  
-**Last Updated:** December 2024 (Notebook 04 complete)  
+**Last Updated:** December 2024 (Notebook 05 complete)  
 **Status:** 🟡 In Progress
 
 ---
@@ -207,46 +207,56 @@
 
 **Objective:** Evaluate close notes quality using LLM as an automated judge with structured criteria.
 
-**Status:** 🔴 **TO DO**
+**Status:** ✅ **COMPLETE**
 
-**What it needs to do:**
-1. **Set up evaluation criteria** - 6 quality dimensions (0-5 scores):
-   - Topic coverage
-   - Profile data accuracy  
-   - Supporting facts
-   - No invented facts
-   - Text structure
-   - Conclusion quality
+**What it does:**
+1. **Set up evaluation criteria** - 5 quality dimensions:
+   - Informativeness - Does it provide useful information?
+   - Specificity - Does it include specific details?
+   - Completeness - Does it cover all key aspects?
+   - No Generic Statements - Does it avoid generic phrases?
+   - Clarity - Is it well-written and clear?
 
-2. **Compare close notes** - For each close note to evaluate:
-   - Find similar ground truth reference (by category/similarity from Notebook 04)
-   - Send pair to LLM judge: (reference, close_note_to_evaluate)
-   - Include incident context (`content`) for better evaluation
-   - Get structured JSON scores with explanations
+2. **Evaluate close notes** - For each close note:
+   - Load from reference dataset (good) and other incidents dataset (bad)
+   - Include incident context (`content` field) for better evaluation
+   - Evaluate against all 5 criteria using LLM-as-a-Judge
+   - Get scores (0.0-1.0) and reasoning for each criterion
 
-3. **Aggregate and visualize results** - Analyze scores across all evaluated close notes
+3. **Compare and visualize results** - Analyze scores across all evaluated close notes:
+   - Compare good vs bad close notes
+   - Visualize score distributions
+   - Show criterion-by-criterion differences
+   - Display detailed results with reasoning
 
 **Deliverables:**
-- Notebook `notebooks/05_llm_as_judge_evaluation.ipynb`
-- Module `src/llm_judge.py` (if needed)
-- Evaluation results with scores and explanations
+- ✅ Notebook `notebooks/05_llm_as_judge_evaluation.ipynb` - **COMPLETE**
+- ✅ Test scripts: `scripts/test_llm_as_judge_ollama.py`, `scripts/test_simple_criteria.py` - **COMPLETE**
+- ✅ Evaluation framework using Unitxt + Ollama - **COMPLETE**
 
 **Dependencies:**
 - ✅ `data/reference_close_notes.csv` - **COMPLETE**
-- ✅ Notebook 04 (Semantics Analysis) - **COMPLETE** (for finding similar references)
-- 🔴 LLM integration (Ollama or other provider) - **NEEDED**
-- 🔴 LLM Client implementation - **NEEDED**
+- ✅ `data/other_incidents.csv` - **COMPLETE**
+- ✅ Notebook 04 (Semantics Analysis) - **COMPLETE**
+- ✅ LLM integration (Ollama) - **COMPLETE**
+- ✅ Unitxt LLM-as-a-Judge implementation - **COMPLETE**
 
-**Non-functional requirements:**
-- Explain what LLM-as-a-Judge means in simple terms
-- Show examples of good vs bad close notes with scores
-- Explain each evaluation criterion clearly
-- Provide interpretation guides for scores
+**Non-functional requirements:** ✅ **MET**
+- ✅ Explains what LLM-as-a-Judge means in simple terms
+- ✅ Shows examples of good vs bad close notes with scores
+- ✅ Explains each evaluation criterion clearly
+- ✅ Provides interpretation guides for scores
+- ✅ Educational content throughout for non-technical audience
 
-**Bias mitigation:**
-- Position swapping (swap reference and evaluated positions)
-- Few-shot prompting (add examples to calibrate judge)
-- Context awareness (include incident description)
+**Key Features:**
+- Uses Unitxt's `LLMJudgeDirect` with `CrossProviderInferenceEngine` (Ollama)
+- 5 custom criteria tailored for close notes evaluation
+- Includes incident context for better evaluation
+- Displays detailed reasoning for each score
+- Visualizations comparing good vs bad close notes
+- Average score calculation across all criteria
+
+**Next Review:** After Notebook 06 completion
 
 ---
 
@@ -332,10 +342,11 @@ At the end of implementation, participants will have:
    - ✅ Generate embeddings for all close notes
    - ✅ Analyze semantic similarity between good and bad close notes
    - ✅ Visualize semantic relationships with category color-coding
-4. 🔴 **LLM-as-a-Judge evaluation** (Notebook 05) - **TO DO**
-   - Structured evaluation with 6 criteria (0-5 scores)
+4. ✅ **LLM-as-a-Judge evaluation** (Notebook 05) - **COMPLETE**
+   - Structured evaluation with 5 criteria (0.0-1.0 scores)
    - Comparison: existing close notes vs ground truth
    - Explainable scores with reasoning
+   - Visualizations and detailed analysis
 5. 🔴 **LLM generation and evaluation** (Notebook 06) - **TO DO**
    - Generate close notes for new incidents
    - Evaluate using semantic similarity + LLM-as-a-Judge
@@ -476,8 +487,19 @@ At the end of implementation, participants will have:
 - ✅ Quality distinction via marker shapes (○ circles = good, □ squares = bad/regular)
 - ✅ Category breakdown summary
 - ✅ Educational content explaining embeddings and semantic similarity
-- ✅ Analysis of alternative embedding models and strategies
-- ✅ Complete documentation and interpretation guides
+
+### Notebook 05 Completion
+- ✅ Created LLM-as-a-Judge evaluation notebook
+- ✅ Implemented 5 custom evaluation criteria (Informativeness, Specificity, Completeness, No Generic Statements, Clarity)
+- ✅ Integrated Unitxt LLM-as-a-Judge with Ollama (local LLM)
+- ✅ Created test scripts: `test_llm_as_judge_ollama.py`, `test_simple_criteria.py`
+- ✅ Evaluation includes incident context for better assessment
+- ✅ Detailed results display with scores, options, and reasoning
+- ✅ Visualizations comparing good vs bad close notes
+- ✅ Educational content explaining LLM-as-a-Judge in simple terms
+- ✅ Criterion-by-criterion comparison and interpretation guides
+- ✅ Score extraction and analysis framework
+- ✅ Comparison between reference (good) and other (bad) close notes
 
 ### Documentation Updates
 - ✅ Created `WORKFLOW.md` - Simple workflow summary
