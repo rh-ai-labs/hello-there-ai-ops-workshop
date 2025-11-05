@@ -137,83 +137,101 @@ Ground truth dataset creation notebook with:
 
 ---
 
-### 🎯 Phase 2: Reference-Based Evaluation with Unitxt
+### 🎯 Phase 2: Reference-Based Evaluation com Llama Stack APIs
 
-#### 📋 Step 2: Reference-Based Evaluation using Unitxt
+#### ✅ Step 2.0: Llama Stack Setup - **COMPLETE**
 
-**Status:** 🔄 **REFACTORING IN PROGRESS**
+**Status:** ✅ Llama Stack server successfully configured and running
 
-**Objetivo:** Comparar o texto gerado por um modelo (LLM) com o texto de referência (`close_notes_ref`), medindo o quanto eles são equivalentes em conteúdo, clareza e completude usando Unitxt para avaliação estruturada.
+**Completed:**
+- ✅ Migrated project from pip to uv for faster package management
+- ✅ Created `pyproject.toml` with all dependencies
+- ✅ Installed llama-stack 0.3.1 (requires Python 3.12+)
+- ✅ Installed all optional provider dependencies:
+  - LLM Providers: together, boto3, anthropic, openai, google-generativeai, fireworks-ai, groq, sambanova
+  - Vector Stores: faiss-cpu, sqlite-vec
+  - Tools: mcp (Model Context Protocol)
+  - Evaluation: autoevals
+- ✅ Created startup scripts (`scripts/start_llama_stack.sh` and `.py`)
+- ✅ Scripts correctly find root directory and `.venv`
+- ✅ Llama Stack server running on `http://localhost:8321`
+- ✅ All APIs available: `/eval`, `/scoring`, `/datasetio`, `/inference`, etc.
+- ✅ Ollama integration configured (provider: ollama, URL: http://localhost:11434)
 
-**Por que usar Unitxt?**
+**Documentation:**
+- ✅ `LLAMA_STACK_SETUP.md` - Complete setup guide
+- ✅ `LLAMA_STACK_OPTIONAL_DEPS.md` - Documentation of optional dependencies
+- ✅ `scripts/README.md` - Script usage instructions
 
-✅ **Standardized Evaluation**: Unitxt provides standardized, reusable components for LLM evaluation  
-✅ **Comprehensive Metrics**: Built-in support for multiple evaluation metrics (BLEU, ROUGE, semantic similarity, etc.)  
-✅ **Dataset Management**: Streamlined data preparation and evaluation dataset handling  
-✅ **LLM-as-a-Judge**: Native support for LLM-based evaluation with structured outputs  
-✅ **Reproducibility**: Consistent evaluation pipelines that are easy to reproduce and share
-
-**Abordagem:** Usar Unitxt para criar um pipeline de avaliação completo que combina métricas tradicionais (n-gram) com comparações semânticas e avaliação via LLM-as-a-Judge.
-
-**Etapas:**
-
-1. **Load Ground Truth Dataset:**
-   - Carregar `data/gt_close_notes.csv` usando Unitxt
-   - Preparar dataset no formato Unitxt (source/target pairs)
-   - Validar estrutura e qualidade dos dados
-
-2. **N-gram Comparisons:**
-   - Implementar comparações n-gram contra o dataset de incidentes
-   - Métricas: BLEU, ROUGE (ROUGE-1, ROUGE-2, ROUGE-L)
-   - Comparar `close_notes_pred` vs `close_notes_ref` usando overlap de n-grams
-   - Analisar similaridade superficial de palavras e frases
-
-3. **Semantic Comparisons:**
-   - Usar embeddings semânticos para comparação profunda
-   - Calcular cosine similarity entre embeddings de `close_notes_pred` e `close_notes_ref`
-   - Usar modelo BGE-M3 (já disponível em `src/utils.py`)
-   - Medir similaridade semântica independente de palavras exatas
-
-4. **LLM-as-a-Judge:**
-   - Implementar avaliação estruturada usando LLM como juiz
-   - Criar prompt template para avaliação multidimensional:
-     - Incident Coverage
-     - Technical Steps & Resolution Actions
-     - Accuracy of Facts
-     - Customer/System Context
-     - Clarity & Structure
-     - Resolution Summary
-   - Obter scores quantitativos (0-5) e explicações qualitativas
-   - Integrar com Unitxt para batch evaluation
-
-**Deliverable:** 
-- Notebook `notebooks/03_reference_based_evaluation.ipynb` completamente refatorado
-- Pipeline de avaliação usando Unitxt
-- Métricas combinadas: n-gram, semântica, e LLM-as-a-Judge
-- Visualizações comparativas entre diferentes modelos/prompts
-- Módulo `src/unitxt_evaluator.py` (opcional) para wrappers utilitários
-
-**Notebook:** 🔄 Refatorando `notebooks/03_reference_based_evaluation.ipynb` com Unitxt
-
-**Dependencies:** 
-- ✅ `data/gt_close_notes.csv` (do Step 1) - **COMPLETE**
-- ✅ Embeddings pré-computados (`gt_close_notes_embeddings.npy`) - **COMPLETE**
-- 🔴 Unitxt instalado e configurado - **NEXT STEP**
-- 🔴 LLM integration para geração de close notes (ver Step 5) - **NEEDED**
-
-**Referência:** 
-- Unitxt Documentation: https://github.com/IBM/unitxt
-- Unitxt Tutorial: https://www.unitxt.ai/
+**Next:** Ready to proceed with evaluation notebooks
 
 ---
 
-### 🎯 Phase 3: LLM-as-a-Judge Evaluation (Integrated in Phase 2)
+#### 📋 Step 2: Realizar a Avaliação Reference-Based usando Llama Stack
 
-#### ✅ Step 3: LLM-as-a-Judge Evaluation - **INTEGRATED IN PHASE 2**
+**Objetivo:** Comparar o texto gerado por um modelo (LLM) com o texto de referência (`close_notes_ref`), medindo o quanto eles são equivalentes em conteúdo, clareza e completude usando as APIs do Llama Stack.
 
-**Status:** ✅ **INTEGRATED** - LLM-as-a-Judge is now part of Phase 2 evaluation pipeline
+**Por que usar Llama Stack APIs?**
 
-**Objetivo:** Usar um modelo de linguagem como avaliador automático — substituindo (ou complementando) revisões humanas. Esta funcionalidade está integrada no Step 2 usando Unitxt.
+✅ **Padronização**: APIs padronizadas (`/eval`, `/scoring`, `/datasetio`) garantem consistência  
+✅ **Eficiência**: Não precisamos reimplementar métricas já disponíveis  
+✅ **Escalabilidade**: APIs otimizadas para processar grandes volumes  
+✅ **Integração**: Facilita integração com outros componentes do ecossistema Red Hat  
+✅ **Manutenibilidade**: Menos código customizado para manter
+
+**Abordagem:** Usar Llama Stack APIs para avaliação — registrando modelos e datasets no stack e utilizando os endpoints de avaliação.
+
+**Etapas:**
+
+1. **Registrar recursos no Llama Stack:**
+   - Registrar modelos: Scenario A (modelo genérico 40B), Scenario B (modelo ajustado 7B)
+   - Registrar dataset: `data/gt_close_notes.csv` via `/datasetio` API
+   - Configurar scoring functions apropriadas
+
+2. **Preparar dados de teste:**
+   - Entrada: `content` (descrição original do incidente)
+   - Saída esperada: `close_notes_ref` (nota de fechamento verdadeira)
+   - Usar `/datasetio` API para carregar e estruturar dados
+
+3. **Executar avaliações usando `/eval` API:**
+   - Testar diferentes modelos e prompts
+   - Usar `/eval` API para executar avaliações padronizadas
+   - Comparar resultados entre Scenario A e Scenario B
+
+4. **Usar `/scoring` API para métricas específicas:**
+   - Configurar scoring functions para métricas customizadas:
+     - Exact Match, Word Match, JSON Match
+     - N-gram Overlap (BLEU/ROUGE)
+     - Semantic Similarity
+   - Usar `/scoring` API para avaliar outputs do modelo
+
+5. **Gerar métricas agregadas:**
+   - Usar resultados das APIs para gerar comparações
+   - Ranking por prompt/modelo
+   - Visualizações e relatórios
+
+**Deliverable:** 
+- Integração com Llama Stack APIs (`/eval`, `/scoring`, `/datasetio`)
+- Métricas de comparação entre `close_notes_pred` e `close_notes_ref`
+- Módulo `src/llama_stack_integration.py` com wrappers para as APIs
+
+**Notebook:** ✅ Criado `notebooks/03_reference_based_evaluation.ipynb` usando Llama Stack APIs
+
+**Dependencies:** 
+- ✅ `data/gt_close_notes.csv` (do Step 1) - **COMPLETE**
+- ✅ Llama Stack instalado e configurado - **COMPLETE**
+- 🔴 Modelos e datasets registrados no Llama Stack - **NEXT STEP**
+- 🔴 LLM integration (ver Step 5) - **NEEDED**
+
+**Referência:** https://llama-stack.readthedocs.io/en/latest/building_applications/evals.html
+
+---
+
+### 🎯 Phase 3: LLM-as-a-Judge Evaluation (via Llama Stack)
+
+#### 📋 Step 3: Estender a análise com LLM-as-a-Judge usando Llama Stack
+
+**Objetivo:** Usar um modelo de linguagem como avaliador automático usando o `/scoring` API do Llama Stack — substituindo (ou complementando) revisões humanas.
 
 **Princípio:** O LLM é instruído a comparar dois textos: o gerado e o de referência. Ele analisa o quanto o texto do modelo cobre os mesmos pontos, é claro, completo e não inventa informações.
 
@@ -384,12 +402,12 @@ By the end of the LLM-as-a-Judge setup, you should have:
 * [ ] **Judge prompt template (structured JSON)**
 * [ ] **Scoring scale (0–5)** documented
 
-**Usando Unitxt para LLM-as-a-Judge:**
+**Usando Llama Stack `/scoring` API:**
 
-- Criar template de avaliação estruturado usando Unitxt
-- Configurar prompt de avaliação com critérios específicos (6 dimensões ITSM)
-- Usar Unitxt para executar avaliações em batch
-- Obter scores estruturados (JSON) e explicações qualitativas
+- Criar scoring function customizada para LLM-as-a-Judge
+- Configurar prompt de avaliação com critérios específicos
+- Usar `/scoring` API para executar avaliações em batch
+- Obter scores estruturados e explicações qualitativas
 
 **Critérios de avaliação recomendados:**
 
@@ -423,16 +441,16 @@ By the end of the LLM-as-a-Judge setup, you should have:
 - **Awareness**: Estar ciente de que LLMs podem preferir texto gerado por LLM sobre texto humano
 
 **Deliverable:** 
-- ✅ Integrado no Step 2 como parte do pipeline de avaliação
-- Template de avaliação LLM-as-a-Judge usando Unitxt
-- Scores estruturados e explicações qualitativas
+- Scoring function para LLM-as-a-Judge no Llama Stack
+- Notebook demonstrando uso do `/scoring` API
+- Integração com pipeline de avaliação existente
 
-**Notebook:** Integrado em `notebooks/03_reference_based_evaluation.ipynb`
+**Notebook:** Criar `notebooks/04_llm_as_judge_evaluation.ipynb` usando Llama Stack `/scoring` API
 
 **Dependencies:**
-- ✅ Unitxt configurado (Phase 2)
-- 🔴 LLM integration para geração de close notes (ver Step 5)
-- ✅ `data/gt_close_notes.csv`
+- Llama Stack configurado (Phase 2)
+- LLM integration (ver Step 5)
+- `data/gt_close_notes.csv`
 
 ---
 
@@ -605,19 +623,18 @@ Ao final da implementação, os participantes terão:
 ### 🔴 Critical Path (Must Have)
 1. ✅ **Complete** - Notebook 01: Data exploration
 2. ✅ **Complete** - Step 1: Create Ground Truth dataset
-3. 🔄 **Refactoring** - Step 2: Reference-Based Evaluation **usando Unitxt**
-   - Load ground truth dataset
-   - N-gram comparisons (BLEU, ROUGE)
-   - Semantic comparisons (embedding similarity)
-   - LLM-as-a-Judge evaluation (structured scoring)
-   - Refactor `notebooks/03_reference_based_evaluation.ipynb`
-4. 🔴 **Next** - Step 5: Implement LLM Client (for generating close notes from incidents)
-5. 🔴 **Next** - Complete Step 2 evaluation pipeline with generated close notes
+3. ✅ **Complete** - Step 2.0: Llama Stack Setup and Configuration
+4. 🔴 **Next** - Step 2: Reference-Based Evaluation **usando Llama Stack APIs** (`/eval`, `/scoring`, `/datasetio`)
+   - Create `notebooks/03_reference_based_evaluation.ipynb`
+   - Register models and datasets in Llama Stack
+   - Implement evaluation using `/eval` and `/scoring` APIs
+5. 🔴 **Next** - Step 3: LLM-as-a-Judge Evaluation (pode usar Llama Stack `/scoring` API)
+6. 🔴 **Next** - Step 5: Implement LLM Client (for generating close notes from incidents)
 
 ### 🟡 Important (Should Have)
 6. 🟡 - Step 4: Langfuse Integration
-7. 🟡 - Step 6: Environment Configuration
-8. 🟡 - Step 7: TrustyAI Integration (if available)
+7. 🟡 - Step 7: TrustyAI Integration
+8. 🟡 - Step 6: Environment Configuration
 
 ### 🟢 Nice to Have (Optional)
 9. 🟢 - Unit tests
@@ -628,10 +645,12 @@ Ao final da implementação, os participantes terão:
 
 ## 🎯 Key Decisions Needed
 
-1. **Evaluation Framework**: ✅ **RESOLVED - Using Unitxt**
-   - ✅ Decision: Replace Llama Stack with Unitxt for evaluation
-   - ✅ Unitxt provides standardized evaluation components
-   - 🔴 **Next:** Install Unitxt and configure evaluation pipeline
+1. **Llama Stack Setup**: ✅ **RESOLVED**
+   - ✅ Llama Stack 0.3.1 installed and running
+   - ✅ Server endpoint: `http://localhost:8321`
+   - ✅ APIs available: `/eval`, `/scoring`, `/datasetio`, `/inference`, etc.
+   - ✅ Configuration: Using starter distribution with Ollama provider
+   - 🔴 **Next:** Register models and datasets (to be done in notebook)
 
 2. **LLM Endpoints**: 🔴 **IN PROGRESS**
    - ✅ Ollama configured: `http://localhost:11434` (using llama3.2:3b model)
@@ -641,17 +660,17 @@ Ao final da implementação, os participantes terão:
 3. **Model Selection**: 
    - Scenario A: Which large general LLM (40B+)?
    - Scenario B: Which smaller tuned LLM (3B-7B)?
-   - For LLM-as-a-Judge: Which model to use as evaluator?
+   - How to register these models in Llama Stack?
 
-4. **Unitxt Configuration**:
-   - Which Unitxt metrics/metrics to use?
-   - How to structure the evaluation dataset?
-   - LLM-as-a-Judge prompt template design?
+4. **TrustyAI**: 
+   - Is TrustyAI available in the environment?
+   - Integration approach with Llama Stack?
+   - What version and API should be used?
 
 5. **Langfuse**: 
    - Will use cloud version or self-hosted?
    - API keys and configuration?
-   - Integration with Unitxt evaluation results?
+   - Integration with Llama Stack results?
 
 ---
 
@@ -663,39 +682,36 @@ Ao final da implementação, os participantes terão:
 - **LLM Output** = `close_notes` generated by the model from `content`
 
 ### Evaluation Strategy
-1. **Phase 1: Traditional NLP Metrics** (N-gram: BLEU, ROUGE) - Baseline comparison
-2. **Phase 2: Semantic Comparisons** (Embedding similarity) - Deep semantic alignment
-3. **Phase 2: LLM-as-a-Judge** - Advanced evaluation that overcomes Phase 1 limitations
-4. **Future: TrustyAI Integration** - Fairness, explainability, bias detection (if available)
+1. **Phase 1: Traditional NLP Metrics** (ROUGE, semantic similarity) - Baseline comparison
+2. **Phase 2: LLM-as-a-Judge** - Advanced evaluation that overcomes Phase 1 limitations
+3. **TrustyAI Integration** - Fairness, explainability, bias detection
 
 ### Code Quality
 - ✅ Good separation of concerns in `src/` modules
-- ✅ Comprehensive evaluation framework (will be refactored to use Unitxt)
+- ✅ Comprehensive evaluation framework (mas será substituído/reforçado por Llama Stack APIs)
 - ✅ Well-structured prompt templates
 - ⚠️ Missing error handling in some utility functions
 - ⚠️ No logging framework (could use Python logging)
 
-### **IMPORTANTE: Mudança de Abordagem - Unitxt**
+### **IMPORTANTE: Mudança de Abordagem**
 
-**Por que usar Unitxt em vez de Llama Stack:**
+**Por que usar Llama Stack APIs em vez de código customizado:**
 
-1. **Standardized Evaluation**: Unitxt fornece componentes padronizados e reutilizáveis para avaliação de LLMs
-2. **Comprehensive Metrics**: Suporte nativo para múltiplas métricas (BLEU, ROUGE, semantic similarity, LLM-as-a-Judge)
-3. **Simplified Pipeline**: Menos overhead de servidor/API, mais foco em avaliação
-4. **Flexibility**: Mais controle sobre o pipeline de avaliação
-5. **Community Support**: Bibliotecas bem mantidas e documentadas
+1. **APIs Padronizadas**: `/eval`, `/scoring`, `/datasetio` fornecem interfaces padronizadas
+2. **Menos Código**: Não precisamos reimplementar funcionalidades já disponíveis
+3. **Melhor Integração**: Facilita integração com outros componentes Red Hat
+4. **Manutenibilidade**: Menos código customizado = menos manutenção
+5. **Escalabilidade**: APIs otimizadas para grandes volumes
 
 **O que manter do código atual:**
 - `src/prompts.py` - Templates de prompts ainda são úteis
-- `src/utils.py` - Funções utilitárias para preparação de dados e embeddings
-- `src/mlflow_tracking.py` - Tracking continua útil
-- `src/evaluator.py` - Pode ser adaptado ou usado como referência
+- `src/utils.py` - Funções utilitárias para preparação de dados
+- `src/mlflow_tracking.py` - Tracking continua útil (pode integrar com Llama Stack)
 
 **O que substituir/melhorar:**
-- Remover dependências de Llama Stack (opcional manter scripts/documentação)
-- Refatorar notebook 03 para usar Unitxt
-- Criar pipeline de avaliação com Unitxt: n-gram, semântica, LLM-as-a-Judge
-- Atualizar dependências (`pyproject.toml`, `requirements.txt`)
+- `src/evaluator.py` - Substituir por wrappers para Llama Stack `/scoring` API
+- Métricas customizadas - Usar `/scoring` API com scoring functions apropriadas
+- Pipeline de avaliação - Usar `/eval` API para execução padronizada
 
 ---
 
