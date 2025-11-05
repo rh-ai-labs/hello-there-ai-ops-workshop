@@ -137,123 +137,141 @@ Ground truth dataset creation notebook with:
 
 ---
 
-### 🎯 Phase 2: Reference-Based Evaluation com Llama Stack APIs
+### 🎯 Phase 2: N-gram Baseline Analysis
 
-#### ✅ Step 2.0: Llama Stack Setup - **COMPLETE**
+#### 📋 Step 2: Baseline N-gram Comparison (gt_close_notes × incident_descriptions)
 
-**Status:** ✅ Llama Stack server successfully configured and running
+**Objetivo:** Realizar uma análise exploratória para testar se métricas n-gram são úteis para avaliar qualidade de close notes.
 
-**Completed:**
-- ✅ Migrated project from pip to uv for faster package management
-- ✅ Created `pyproject.toml` with all dependencies
-- ✅ Installed llama-stack 0.3.1 (requires Python 3.12+)
-- ✅ Installed all optional provider dependencies:
-  - LLM Providers: together, boto3, anthropic, openai, google-generativeai, fireworks-ai, groq, sambanova
-  - Vector Stores: faiss-cpu, sqlite-vec
-  - Tools: mcp (Model Context Protocol)
-  - Evaluation: autoevals
-- ✅ Created startup scripts (`scripts/start_llama_stack.sh` and `.py`)
-- ✅ Scripts correctly find root directory and `.venv`
-- ✅ Llama Stack server running on `http://localhost:8321`
-- ✅ All APIs available: `/eval`, `/scoring`, `/datasetio`, `/inference`, etc.
-- ✅ Ollama integration configured (provider: ollama, URL: http://localhost:11434)
+**Contexto:**
+1. Temos um dataset de incidentes com descrições originais (`content`)
+2. Extraímos close notes de alta qualidade para servir como referência (`close_notes_ref`)
+3. Objetivo final: Avaliar close notes (existentes ou geradas por LLM) contra essas referências
 
-**Documentation:**
-- ✅ `LLAMA_STACK_SETUP.md` - Complete setup guide
-- ✅ `LLAMA_STACK_OPTIONAL_DEPS.md` - Documentation of optional dependencies
-- ✅ `scripts/README.md` - Script usage instructions
+**Hipótese:** Descrições de incidentes e close notes usam linguagem muito diferente, tornando métricas n-gram menos úteis para avaliação.
 
-**Next:** Ready to proceed with evaluation notebooks
+**Teste:** Comparar close notes de ground truth vs descrições de incidentes usando métricas n-gram.
 
----
+**Resultado Esperado:** Se os scores n-gram forem muito baixos (0.1-0.3), confirma que descrições de incidentes e close notes usam vocabulário diferente, validando que devemos usar **LLM-as-a-Judge** (avaliação semântica) em vez de n-grams para a avaliação principal.
 
-#### 📋 Step 2: Realizar a Avaliação Reference-Based usando Llama Stack
+**Por que usar Unitxt?**
 
-**Objetivo:** Comparar o texto gerado por um modelo (LLM) com o texto de referência (`close_notes_ref`), medindo o quanto eles são equivalentes em conteúdo, clareza e completude usando as APIs do Llama Stack.
+✅ **Padronização**: Framework padronizado para avaliação de modelos  
+✅ **Eficiência**: Métricas pré-implementadas e otimizadas  
+✅ **Escalabilidade**: Processamento eficiente de grandes volumes  
+✅ **Manutenibilidade**: Menos código customizado para manter  
+✅ **Reprodutibilidade**: Resultados consistentes e comparáveis
 
-**Por que usar Llama Stack APIs?**
+**Abordagem:** Usar Unitxt para realizar comparações n-gram entre:
+- **Ground Truth Dataset**: `data/gt_close_notes.csv` (contém `close_notes_ref`)
+- **Incidents Dataset**: `data/incidents_prepared.csv` (contém `content` - descrições de problemas)
 
-✅ **Padronização**: APIs padronizadas (`/eval`, `/scoring`, `/datasetio`) garantem consistência  
-✅ **Eficiência**: Não precisamos reimplementar métricas já disponíveis  
-✅ **Escalabilidade**: APIs otimizadas para processar grandes volumes  
-✅ **Integração**: Facilita integração com outros componentes do ecossistema Red Hat  
-✅ **Manutenibilidade**: Menos código customizado para manter
-
-**Abordagem:** Usar Llama Stack APIs para avaliação — registrando modelos e datasets no stack e utilizando os endpoints de avaliação.
+**Nota:** Esta comparação é um **teste de baseline**. A avaliação real será feita na Phase 4 usando LLM-as-a-Judge, que compara close notes contra close notes usando critérios semânticos.
 
 **Etapas:**
 
-1. **Registrar recursos no Llama Stack:**
-   - Registrar modelos: Scenario A (modelo genérico 40B), Scenario B (modelo ajustado 7B)
-   - Registrar dataset: `data/gt_close_notes.csv` via `/datasetio` API
-   - Configurar scoring functions apropriadas
+1. **Preparar datasets para Unitxt:**
+   - Carregar `gt_close_notes.csv` com campo `close_notes_ref`
+   - Carregar `incidents_prepared.csv` com campo `content`
+   - Estruturar dados no formato esperado pelo Unitxt
 
-2. **Preparar dados de teste:**
-   - Entrada: `content` (descrição original do incidente)
-   - Saída esperada: `close_notes_ref` (nota de fechamento verdadeira)
-   - Usar `/datasetio` API para carregar e estruturar dados
+2. **Configurar métricas n-gram no Unitxt:**
+   - ROUGE-1, ROUGE-2, ROUGE-L, ROUGE-Lsum (n-gram overlap)
 
-3. **Executar avaliações usando `/eval` API:**
-   - Testar diferentes modelos e prompts
-   - Usar `/eval` API para executar avaliações padronizadas
-   - Comparar resultados entre Scenario A e Scenario B
+3. **Executar comparações:**
+   - Para cada par (ground truth close note, incident description)
+   - Calcular métricas n-gram usando Unitxt
+   - Agregar resultados por categoria/subcategoria
 
-4. **Usar `/scoring` API para métricas específicas:**
-   - Configurar scoring functions para métricas customizadas:
-     - Exact Match, Word Match, JSON Match
-     - N-gram Overlap (BLEU/ROUGE)
-     - Semantic Similarity
-   - Usar `/scoring` API para avaliar outputs do modelo
-
-5. **Gerar métricas agregadas:**
-   - Usar resultados das APIs para gerar comparações
-   - Ranking por prompt/modelo
-   - Visualizações e relatórios
+4. **Analisar resultados e concluir:**
+   - Gerar visualizações de distribuição de scores
+   - Identificar padrões por categoria
+   - **Conclusão:** Se scores são baixos, confirma hipótese e valida uso de LLM-as-a-Judge
 
 **Deliverable:** 
-- Integração com Llama Stack APIs (`/eval`, `/scoring`, `/datasetio`)
-- Métricas de comparação entre `close_notes_pred` e `close_notes_ref`
-- Módulo `src/llama_stack_integration.py` com wrappers para as APIs
+- Notebook `notebooks/03_ngram_comparisons.ipynb` usando Unitxt
+- Métricas n-gram comparando `close_notes_ref` vs `content`
+- Visualizações e análise de resultados
+- Conclusão sobre relevância de n-grams para avaliação
 
-**Notebook:** ✅ Criado `notebooks/03_reference_based_evaluation.ipynb` usando Llama Stack APIs
+**Notebook:** ✅ Criado `notebooks/03_ngram_comparisons.ipynb` usando Unitxt
 
 **Dependencies:** 
 - ✅ `data/gt_close_notes.csv` (do Step 1) - **COMPLETE**
-- ✅ Llama Stack instalado e configurado - **COMPLETE**
-- 🔴 Modelos e datasets registrados no Llama Stack - **NEXT STEP**
-- 🔴 LLM integration (ver Step 5) - **NEEDED**
+- ✅ `data/incidents_prepared.csv` - **COMPLETE**
+- ✅ Unitxt instalado (`unitxt>=1.0.0`) - **COMPLETE**
+- ✅ Configuração Unitxt para n-gram metrics - **COMPLETE**
 
-**Referência:** https://llama-stack.readthedocs.io/en/latest/building_applications/evals.html
-
----
-
-### 🎯 Phase 3: LLM-as-a-Judge Evaluation (via Llama Stack)
-
-#### 📋 Step 3: Estender a análise com LLM-as-a-Judge usando Llama Stack
-
-**Objetivo:** Usar um modelo de linguagem como avaliador automático usando o `/scoring` API do Llama Stack — substituindo (ou complementando) revisões humanas.
-
-**Princípio:** O LLM é instruído a comparar dois textos: o gerado e o de referência. Ele analisa o quanto o texto do modelo cobre os mesmos pontos, é claro, completo e não inventa informações.
-
-## 🎯 Objective
-
-Evaluate how well a model-generated *close_note* summarizes and documents the resolution of an IT incident, compared to a *reference (ground truth)* close note.
-
-The goal is to measure:
-
-* **Accuracy** — Are the steps and facts consistent with the reference?
-* **Completeness** — Does the note include all essential resolution details?
-* **Clarity** — Is the note written in a clear, professional IT support style?
-
-This approach uses an **LLM as a structured evaluator (“judge”)** to produce **quantitative (scores)** and **qualitative (explanations)** feedback — replicating the *SumUp* benchmark method, but focused on ITSM workflows.
+**Status:** ✅ **COMPLETE** - Notebook criado e funcional
 
 ---
 
-## ⚙️ Step 1 — Define Evaluation Dimensions for ITSM Context
+### 🎯 Phase 3: Semantic Baseline Analysis (Optional)
 
-Each generated *close_note* is assessed along **six concrete quality dimensions** relevant to incident and service management documentation:
+#### 📋 Step 3: Baseline Semantic Comparison (gt_close_notes × incident_descriptions)
 
-| Dimension                                | Description                                                                            | Example of “Good” (Score 5)                                                                              |
+**Status:** 🟡 **OPTIONAL** - Pode ser pulado se Phase 2 já confirmar que métricas tradicionais não são adequadas
+
+**Objetivo:** Comparar o texto de referência (`close_notes_ref` do ground truth dataset) com os textos de incidentes (`content` do incidents dataset) usando métricas de similaridade semântica como análise complementar.
+
+**Princípio:** Usar embeddings semânticos para medir similaridade de significado entre textos, capturando relações que métricas n-gram não conseguem capturar.
+
+**Nota:** Similar à Phase 2, esta é uma análise de baseline. Se Phase 2 já confirmar que métricas tradicionais não são adequadas, esta fase pode ser opcional. A avaliação principal será feita na Phase 4 usando LLM-as-a-Judge.
+
+**Por que usar Unitxt?**
+
+✅ **Padronização**: Framework padronizado para avaliação de modelos  
+✅ **Eficiência**: Métricas de similaridade semântica pré-implementadas  
+✅ **Escalabilidade**: Processamento eficiente de grandes volumes  
+✅ **Manutenibilidade**: Menos código customizado para manter  
+✅ **Reprodutibilidade**: Resultados consistentes e comparáveis
+
+**Abordagem:** Usar Unitxt para realizar comparações semânticas entre:
+- **Ground Truth Dataset**: `data/gt_close_notes.csv` (contém `close_notes_ref`)
+- **Incidents Dataset**: `data/incidents_prepared.csv` (contém `content`)
+
+**Etapas:**
+
+1. **Preparar datasets para Unitxt:**
+   - Carregar `gt_close_notes.csv` com campo `close_notes_ref`
+   - Carregar `incidents_prepared.csv` com campo `content`
+   - Estruturar dados no formato esperado pelo Unitxt
+
+2. **Configurar métricas semânticas no Unitxt:**
+   - Cosine similarity usando embeddings (sentence-transformers)
+   - Semantic similarity scores
+   - Opcionalmente usar embeddings pré-computados (`gt_close_notes_embeddings.npy`)
+
+3. **Executar comparações semânticas:**
+   - Para cada par (ground truth close note, incident description)
+   - Calcular similaridade semântica usando Unitxt
+   - Comparar com métricas n-gram da Phase 2
+   - Agregar resultados por categoria/subcategoria
+
+4. **Analisar resultados:**
+   - Gerar visualizações de distribuição de scores semânticos
+   - Comparar com scores n-gram (Phase 2)
+   - Identificar padrões por categoria
+   - Conclusão sobre relevância de métricas semânticas
+
+**Deliverable:** 
+- Notebook `notebooks/04_semantic_comparisons.ipynb` usando Unitxt (opcional)
+- Métricas de similaridade semântica comparando `close_notes_ref` vs `content`
+- Visualizações e análise comparativa com Phase 2
+
+**Notebook:** 🟡 Criar `notebooks/04_semantic_comparisons.ipynb` usando Unitxt (opcional)
+
+**Dependencies:** 
+- ✅ `data/gt_close_notes.csv` (do Step 1) - **COMPLETE**
+- ✅ `data/gt_close_notes_embeddings.npy` (opcional) - **COMPLETE**
+- ✅ `data/incidents_prepared.csv` - **COMPLETE**
+- ✅ Unitxt instalado (`unitxt>=1.0.0`) - **COMPLETE**
+- ✅ Sentence-transformers/BGE-M3 para embeddings - **COMPLETE**
+- 🔴 Configuração Unitxt para semantic similarity metrics - **OPTIONAL**
+
+**Referência:** Unitxt documentation for semantic similarity metrics
+
+---                                | Description                                                                            | Example of “Good” (Score 5)                                                                              |
 | ---------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | **Incident Coverage**                    | Does the generated note cover the same core problem and context as the reference note? | Mentions the same issue (e.g., “Google Workspace crashing when saving files”) and troubleshooting scope. |
 | **Technical Steps & Resolution Actions** | Are the main diagnostic or corrective steps included and technically sound?            | Lists actions such as “cleared cache,” “reinstalled software,” or “updated drivers.”                     |
@@ -338,8 +356,13 @@ This is the reusable prompt you’ll give to the evaluator model:
 
 ## 🔍 Step 4 — How to Run the Evaluation
 
-1. **Select dataset:** use the same incident records for which both a *reference* and *generated* close note exist.
-2. **Send each pair** (`close_notes_ref`, `close_notes_pred`) through the judge prompt.
+1. **Select dataset:** use incident records for which we have:
+   - *Reference* close note (`close_notes_ref` from ground truth)
+   - *Close note to evaluate* (`close_notes` from dataset, or LLM-generated)
+   
+   **Note:** Each incident has different context, so we match by category/similarity or use same incident pairs where available.
+
+2. **Send each pair** (`close_notes_ref`, `close_notes_to_evaluate`) through the judge prompt.
 3. **Collect JSON outputs** for all samples.
 4. **Aggregate scores** across all dimensions and samples:
 
@@ -348,6 +371,11 @@ This is the reusable prompt you’ll give to the evaluator model:
    * Distribution of low scores (to detect weak generations).
 
 This can be done as a batch notebook or automated evaluation job.
+
+**Challenges & Solutions:**
+- **Challenge:** Each incident has different context → different close notes expected
+- **Solution:** Match by category/subcategory, or use semantic similarity to find similar incidents
+- **Solution:** Provide context (incident description) to judge for better evaluation
 
 ---
 
@@ -454,9 +482,174 @@ By the end of the LLM-as-a-Judge setup, you should have:
 
 ---
 
-### 🎯 Phase 4: Observability Integration
+### 🎯 Phase 4: LLM-as-a-Judge Evaluation ⭐ **MAIN EVALUATION METHOD**
 
-#### 📋 Step 4: Integração com Langfuse
+#### 📋 Step 4: LLM-as-a-Judge Evaluation
+
+**Objetivo:** Usar um modelo de linguagem como avaliador automático para comparar **close notes** (existentes ou geradas por LLM) com **close notes de referência** (ground truth), substituindo (ou complementando) revisões humanas.
+
+**Este é o método de avaliação principal** que será usado para avaliar qualidade de close notes, superando as limitações das métricas n-gram e semânticas (Phase 2 e 3).
+
+**Princípio:** O LLM é instruído a comparar dois textos de close notes: o gerado/avaliado e o de referência (ground truth). Ele analisa o quanto o texto avaliado cobre os mesmos pontos, é claro, completo e não inventa informações.
+
+**Comparação:**
+- **Referência**: Close notes de ground truth (`close_notes_ref`)
+- **Avaliado**: Close notes existentes (`close_notes` do dataset) ou geradas por LLM
+
+**Nota:** Diferente das Phases 2 e 3, aqui comparamos **close notes vs close notes**, não close notes vs descrições de incidentes.
+
+## 🎯 Objective
+
+Evaluate how well a model-generated *close_note* summarizes and documents the resolution of an IT incident, compared to a *reference (ground truth)* close note.
+
+The goal is to measure:
+
+* **Accuracy** — Are the steps and facts consistent with the reference?
+* **Completeness** — Does the note include all essential resolution details?
+* **Clarity** — Is the note written in a clear, professional IT support style?
+
+This approach uses an **LLM as a structured evaluator ("judge")** to produce **quantitative (scores)** and **qualitative (explanations)** feedback — replicating the *SumUp* benchmark method, but focused on ITSM workflows.
+
+---
+
+## ⚙️ Step 1 — Define Evaluation Dimensions for ITSM Context
+
+Each generated *close_note* is assessed along **six concrete quality dimensions** relevant to incident and service management documentation:
+
+| Dimension                                | Description                                                                            | Example of "Good" (Score 5)                                                                              |
+| ---------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Incident Coverage**                    | Does the generated note cover the same core problem and context as the reference note? | Mentions the same issue (e.g., "Google Workspace crashing when saving files") and troubleshooting scope. |
+| **Technical Steps & Resolution Actions** | Are the main diagnostic or corrective steps included and technically sound?            | Lists actions such as "cleared cache," "reinstalled software," or "updated drivers."                     |
+| **Accuracy of Facts**                    | Does it avoid adding or changing facts not present in the reference note?              | No new systems, error codes, or users invented.                                                          |
+| **Customer/System Context**              | Does it correctly reference the affected system, user, or service?                     | Correctly identifies the impacted system (e.g., "Epson ET-2760 printer") and user role.                  |
+| **Clarity & Structure**                  | Is the note logically structured (problem → action → result)?                          | Uses concise sentences, chronological order, and readable formatting.                                    |
+| **Resolution Summary / Conclusion**      | Does it clearly describe the outcome and confirm resolution or escalation?             | Ends with "Issue resolved and verified with user" or equivalent closure statement.                       |
+
+Each dimension is rated from **0 to 5**, where 5 = excellent alignment, 0 = completely incorrect.
+
+---
+
+## 🧩 Step 2 — Judge Prompt Template
+
+The evaluation LLM (judge) must follow a **structured JSON output**, ensuring consistency and automation.
+This is the reusable prompt you'll give to the evaluator model:
+
+---
+
+> **System Prompt:**
+> You are an expert in IT Service Management and incident documentation.
+> Your task is to evaluate how accurately and completely a *generated close note* describes the resolution of an incident, compared to a *reference note*.
+>
+> Compare the following texts:
+>
+> * **Reference (ground truth) close note:**
+>   {close_notes_ref}
+>
+> * **Generated close note:**
+>   {close_notes_pred}
+>
+> Evaluate the generated note according to the following criteria.
+> For each, assign a **score from 0 to 5** and include a one-sentence explanation.
+>
+> 1. **Incident coverage (0–5)** — Does it address the same issue and context?
+> 2. **Technical steps & resolution actions (0–5)** — Are the main diagnostic and corrective actions consistent and complete?
+> 3. **Accuracy of facts (0–5)** — Does it avoid inventing systems, errors, or results?
+> 4. **Customer/system context (0–5)** — Does it correctly reference the affected service, device, or user?
+> 5. **Clarity & structure (0–5)** — Is it readable, logically ordered, and professionally written?
+> 6. **Resolution summary (0–5)** — Does it clearly describe the outcome or confirmation of resolution?
+>
+> Then compute:
+>
+> * `"general_score"` — the average of the six scores
+> * `"general_score_explanation"` — a brief summary of your overall judgment
+>
+> Return the evaluation as valid JSON only:
+>
+> ```json
+> {
+>   "check_incident_coverage": 5,
+>   "check_incident_coverage_explanation": "...",
+>   "check_technical_steps": 5,
+>   "check_technical_steps_explanation": "...",
+>   "check_accuracy_of_facts": 5,
+>   "check_accuracy_of_facts_explanation": "...",
+>   "check_customer_context": 5,
+>   "check_customer_context_explanation": "...",
+>   "check_clarity_structure": 4,
+>   "check_clarity_structure_explanation": "...",
+>   "check_resolution_summary": 5,
+>   "check_resolution_summary_explanation": "...",
+>   "general_score": 4.83,
+>   "general_score_explanation": "The generated close note accurately covers the same incident, includes consistent troubleshooting steps, and provides a clear resolution summary with no invented facts."
+> }
+> ```
+>
+> ---
+>
+> ## 🧮 Step 3 — Scoring Standards
+>
+> | Score             | Interpretation                                                    | Example                                                             |
+> | ----------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------- |
+> | **5 (Excellent)** | Fully accurate and complete; aligns perfectly with the reference. | Mentions identical issue, actions, and outcome in a structured way. |
+> | **4 (Good)**      | Mostly accurate with minor omissions or paraphrasing.             | Slightly simplified version but conveys same meaning.               |
+> | **3 (Adequate)**  | Covers the main idea but misses important details.                | Omits one or two troubleshooting steps.                             |
+> | **2 (Weak)**      | Only partially correct; vague or incomplete.                      | Describes the issue but not the fix.                                |
+> | **1 (Poor)**      | Misleading or incorrect content.                                  | Introduces wrong system or incorrect result.                        |
+> | **0 (Invalid)**   | Completely unrelated or hallucinated.                             | Talks about something entirely different.                           |
+>
+> ---
+>
+> ## 🔍 Step 4 — How to Run the Evaluation
+>
+> 1. **Select dataset:** use the same incident records for which both a *reference* and *generated* close note exist.
+> 2. **Send each pair** (`close_notes_ref`, `close_notes_pred`) through the judge prompt.
+> 3. **Collect JSON outputs** for all samples.
+> 4. **Aggregate scores** across all dimensions and samples:
+>
+>    * Mean score per dimension;
+>    * Mean `general_score`;
+>    * Distribution of low scores (to detect weak generations).
+>
+> This can be done as a batch notebook or automated evaluation job.
+
+**Implementação:**
+
+- Usar LangChain para orquestração de chamadas LLM
+- Integrar com Ollama ou outros providers LLM
+- Processar avaliações em batch
+- Armazenar resultados para análise
+- **Estrutura de avaliação:**
+  - Para cada close note a avaliar:
+    1. Encontrar close note de referência similar (por categoria ou similaridade semântica)
+    2. Opcionalmente incluir contexto do incident (`content`) para melhor avaliação
+    3. Enviar par (referência, avaliado) para LLM judge
+    4. Obter scores estruturados (JSON) com explicações
+
+**Mitigação de Vieses:**
+- **Position swapping**: Trocar posições de referência e resultado para contrarrestar viés de posição
+- **Few-shot prompting**: Adicionar exemplos ao prompt para calibrar avaliador
+- **Context awareness**: Incluir descrição do incident para melhor contexto
+
+**Deliverable:** 
+- Notebook `notebooks/05_llm_as_judge_evaluation.ipynb`
+- Módulo `src/llm_judge.py` com implementação do judge
+- Integração com pipeline de avaliação existente
+- Métricas agregadas e visualizações
+- Exemplos de boas e ruins gerações com scores correspondentes
+
+**Notebook:** 🔴 Criar `notebooks/05_llm_as_judge_evaluation.ipynb`
+
+**Dependencies:**
+- ✅ `data/gt_close_notes.csv` - **COMPLETE**
+- ✅ LangChain instalado - **COMPLETE**
+- 🔴 LLM integration (Ollama ou outro provider) - **NEEDED**
+- 🔴 LLM Client implementation (Phase 6) - **NEEDED**
+
+---
+
+### 🎯 Phase 5: Observability Integration
+
+#### 📋 Step 5: Integração com Langfuse
 
 **Objetivo:** Centralizar os logs de prompts, respostas, métricas e julgamentos dos modelos.
 
@@ -498,9 +691,9 @@ By the end of the LLM-as-a-Judge setup, you should have:
 
 ---
 
-### 🎯 Phase 5: LLM Integration
+### 🎯 Phase 6: LLM Integration
 
-#### 📋 Step 5: Implementar LLM Client
+#### 📋 Step 6: Implementar LLM Client
 
 **Objetivo:** Criar módulo para integração com modelos LLM (OpenShift AI, vLLM, ou outros).
 
@@ -533,9 +726,9 @@ class LLMClient:
 
 ---
 
-### 🎯 Phase 6: Configuration & Environment
+### 🎯 Phase 7: Configuration & Environment
 
-#### 📋 Step 6: Configuração de Ambiente
+#### 📋 Step 7: Configuração de Ambiente
 
 **Objetivo:** Facilitar configuração e deployment do projeto.
 
@@ -571,11 +764,11 @@ class LLMClient:
 
 ---
 
-### 🎯 Phase 7: TrustyAI Integration
+### 🎯 Phase 8: TrustyAI Integration
 
-#### 📋 Step 7: Integração com TrustyAI (via Llama Stack)
+#### 📋 Step 8: Integração com TrustyAI
 
-**Objetivo:** Adicionar análises de fairness, explainability e bias detection usando TrustyAI integrado ao Llama Stack.
+**Objetivo:** Adicionar análises de fairness, explainability e bias detection usando TrustyAI.
 
 **Funcionalidades:**
 
@@ -584,24 +777,20 @@ class LLMClient:
 - **Bias detection** - Verificar diferenças sistemáticas entre grupos
 - **Confidence scores** - Medir confiança nas avaliações
 
-**Integração com Llama Stack:**
-- TrustyAI pode ser usado como parte do pipeline de avaliação do Llama Stack
-- Integrar análises de fairness e explainability nos scoring functions
-- Usar resultados do TrustyAI como métricas adicionais no `/scoring` API
-
-**Referência:** 
-- https://rh-aiservices-bu.github.io/llama-stack-tutorial/modules/advanced-04-eval.html
-- Llama Stack documentation para integração TrustyAI
+**Integração:**
+- TrustyAI pode ser usado como parte do pipeline de avaliação
+- Integrar análises de fairness e explainability nos processos de avaliação
+- Usar resultados do TrustyAI como métricas adicionais
 
 **Deliverable:** 
-- Integração TrustyAI com Llama Stack scoring functions
+- Integração TrustyAI com pipeline de avaliação
 - Notebook demonstrando uso combinado
 - Atualizar `requirements.txt` (descomentar TrustyAI)
 - Módulo `src/trustyai_integration.py` (se necessário)
 
 **Dependencies:**
 - TrustyAI disponível no ambiente
-- Llama Stack configurado (Phase 2)
+- Phases 2, 3, e 4 completas
 - Configuração de endpoints
 
 ---
@@ -611,10 +800,14 @@ class LLMClient:
 Ao final da implementação, os participantes terão:
 
 1. ✅ **Dataset com ground truth de close_notes** (`data/gt_close_notes.csv`)
-2. ✅ **Pipeline de comparação reference-based** (para avaliar modelos e prompts)
-3. ✅ **Camada de avaliação automatizada via LLM-as-a-Judge**
-4. ✅ **Observabilidade e rastreabilidade** com Langfuse e MLflow
-5. ✅ **Capacidade de demonstrar** que um modelo menor e governado (ajustado e avaliado) produz resultados mais confiáveis, explicáveis e consistentes que um LLM genérico
+2. ✅ **Análise baseline n-gram** (Phase 2 usando Unitxt) - Validação de hipótese
+3. 🟡 **Análise baseline semântica** (Phase 3 usando Unitxt) - Opcional
+4. 🔴 **Camada de avaliação automatizada via LLM-as-a-Judge** (Phase 4) ⭐ **MAIN METHOD**
+   - Avaliação estruturada com 6 critérios (0-5)
+   - Comparação de close notes vs ground truth
+   - Scores explicáveis com reasoning
+5. 🔴 **Observabilidade e rastreabilidade** com Langfuse e MLflow
+6. 🔴 **Capacidade de demonstrar** que um modelo menor e governado (ajustado e avaliado) produz resultados mais confiáveis, explicáveis e consistentes que um LLM genérico
 
 ---
 
@@ -623,18 +816,25 @@ Ao final da implementação, os participantes terão:
 ### 🔴 Critical Path (Must Have)
 1. ✅ **Complete** - Notebook 01: Data exploration
 2. ✅ **Complete** - Step 1: Create Ground Truth dataset
-3. ✅ **Complete** - Step 2.0: Llama Stack Setup and Configuration
-4. 🔴 **Next** - Step 2: Reference-Based Evaluation **usando Llama Stack APIs** (`/eval`, `/scoring`, `/datasetio`)
-   - Create `notebooks/03_reference_based_evaluation.ipynb`
-   - Register models and datasets in Llama Stack
-   - Implement evaluation using `/eval` and `/scoring` APIs
-5. 🔴 **Next** - Step 3: LLM-as-a-Judge Evaluation (pode usar Llama Stack `/scoring` API)
-6. 🔴 **Next** - Step 5: Implement LLM Client (for generating close notes from incidents)
+3. ✅ **Complete** - Phase 2: N-gram Baseline Analysis using Unitxt
+   - ✅ Created `notebooks/03_ngram_comparisons.ipynb`
+   - ✅ Implemented n-gram metrics (ROUGE) using Unitxt
+   - ✅ Compare gt_close_notes × incident_descriptions (baseline test)
+4. 🟡 **Optional** - Phase 3: Semantic Baseline Analysis using Unitxt
+   - 🟡 Create `notebooks/04_semantic_comparisons.ipynb` (optional)
+   - 🟡 Implement semantic similarity metrics using Unitxt
+   - 🟡 Compare gt_close_notes × incident_descriptions (optional baseline)
+5. 🔴 **Next** - Phase 4: LLM-as-a-Judge Evaluation ⭐ **MAIN EVALUATION**
+   - 🔴 Create `notebooks/05_llm_as_judge_evaluation.ipynb`
+   - 🔴 Implement LLM judge for structured evaluation
+   - 🔴 Compare close_notes (existing/LLM-generated) × gt_close_notes
+   - 🔴 Implement 6 evaluation criteria with 0-5 scoring
+6. 🔴 **Next** - Phase 6: Implement LLM Client (for generating close notes from incidents)
 
 ### 🟡 Important (Should Have)
-6. 🟡 - Step 4: Langfuse Integration
-7. 🟡 - Step 7: TrustyAI Integration
-8. 🟡 - Step 6: Environment Configuration
+7. 🟡 - Phase 5: Langfuse Integration
+8. 🟡 - Phase 8: TrustyAI Integration
+9. 🟡 - Phase 7: Environment Configuration
 
 ### 🟢 Nice to Have (Optional)
 9. 🟢 - Unit tests
@@ -645,32 +845,29 @@ Ao final da implementação, os participantes terão:
 
 ## 🎯 Key Decisions Needed
 
-1. **Llama Stack Setup**: ✅ **RESOLVED**
-   - ✅ Llama Stack 0.3.1 installed and running
-   - ✅ Server endpoint: `http://localhost:8321`
-   - ✅ APIs available: `/eval`, `/scoring`, `/datasetio`, `/inference`, etc.
-   - ✅ Configuration: Using starter distribution with Ollama provider
-   - 🔴 **Next:** Register models and datasets (to be done in notebook)
+1. **Evaluation Framework**: ✅ **RESOLVED**
+   - ✅ Unitxt selected as evaluation framework
+   - ✅ Unitxt installed (`unitxt>=1.0.0`)
+   - 🔴 **Next:** Configure Unitxt for n-gram and semantic metrics
 
 2. **LLM Endpoints**: 🔴 **IN PROGRESS**
    - ✅ Ollama configured: `http://localhost:11434` (using llama3.2:3b model)
-   - 🔴 **Next:** Determine if we need additional endpoints or can use Ollama for both scenarios
-   - Note: Can use different Ollama models for Scenario A (larger) vs Scenario B (smaller)
+   - 🔴 **Next:** Determine if we need additional endpoints or can use Ollama for LLM-as-a-Judge
+   - Note: Can use different Ollama models for different scenarios
 
 3. **Model Selection**: 
-   - Scenario A: Which large general LLM (40B+)?
-   - Scenario B: Which smaller tuned LLM (3B-7B)?
-   - How to register these models in Llama Stack?
+   - For LLM-as-a-Judge: Which model to use as judge?
+   - For generating close notes: Which models for Scenario A vs Scenario B?
 
 4. **TrustyAI**: 
    - Is TrustyAI available in the environment?
-   - Integration approach with Llama Stack?
+   - Integration approach with evaluation pipeline?
    - What version and API should be used?
 
 5. **Langfuse**: 
    - Will use cloud version or self-hosted?
    - API keys and configuration?
-   - Integration with Llama Stack results?
+   - Integration with evaluation results?
 
 ---
 
@@ -682,36 +879,57 @@ Ao final da implementação, os participantes terão:
 - **LLM Output** = `close_notes` generated by the model from `content`
 
 ### Evaluation Strategy
-1. **Phase 1: Traditional NLP Metrics** (ROUGE, semantic similarity) - Baseline comparison
-2. **Phase 2: LLM-as-a-Judge** - Advanced evaluation that overcomes Phase 1 limitations
-3. **TrustyAI Integration** - Fairness, explainability, bias detection
+
+**Fase de Baseline (Phase 2-3):**
+1. **Phase 2: N-gram Comparisons** (ROUGE, BLEU) using Unitxt
+   - **Objetivo:** Testar hipótese de que descrições de incidentes e close notes usam linguagem diferente
+   - **Comparação:** Ground truth close notes vs incident descriptions
+   - **Resultado esperado:** Scores baixos confirmam que n-grams não são adequados
+
+2. **Phase 3: Semantic Comparisons** (embedding similarity) using Unitxt - **OPCIONAL**
+   - **Objetivo:** Análise complementar de similaridade semântica
+   - **Comparação:** Ground truth close notes vs incident descriptions
+   - **Status:** Opcional se Phase 2 já confirmar que métricas tradicionais não são adequadas
+
+**Fase de Avaliação Principal (Phase 4):**
+3. **Phase 4: LLM-as-a-Judge** ⭐ **MAIN EVALUATION METHOD**
+   - **Objetivo:** Avaliar qualidade de close notes usando critérios semânticos estruturados
+   - **Comparação:** Close notes (existentes ou LLM-geradas) vs ground truth close notes
+   - **Critérios:** Topic coverage, accuracy, facts, structure, conclusion
+   - **Vantagem:** Avalia significado e qualidade, não apenas overlap de palavras
+   - **Escalável:** Não requer labeling humano
+
+**Fase de Integração:**
+4. **TrustyAI Integration** - Fairness, explainability, bias detection
 
 ### Code Quality
 - ✅ Good separation of concerns in `src/` modules
-- ✅ Comprehensive evaluation framework (mas será substituído/reforçado por Llama Stack APIs)
+- ✅ Comprehensive evaluation framework (`evaluator.py` - será integrado com Unitxt)
 - ✅ Well-structured prompt templates
 - ⚠️ Missing error handling in some utility functions
 - ⚠️ No logging framework (could use Python logging)
 
 ### **IMPORTANTE: Mudança de Abordagem**
 
-**Por que usar Llama Stack APIs em vez de código customizado:**
+**Por que usar Unitxt em vez de código customizado:**
 
-1. **APIs Padronizadas**: `/eval`, `/scoring`, `/datasetio` fornecem interfaces padronizadas
+1. **Framework Padronizado**: Unitxt fornece framework padronizado para avaliação
 2. **Menos Código**: Não precisamos reimplementar funcionalidades já disponíveis
-3. **Melhor Integração**: Facilita integração com outros componentes Red Hat
+3. **Melhor Integração**: Facilita integração com outros componentes
 4. **Manutenibilidade**: Menos código customizado = menos manutenção
-5. **Escalabilidade**: APIs otimizadas para grandes volumes
+5. **Escalabilidade**: Processamento otimizado para grandes volumes
+6. **Reprodutibilidade**: Resultados consistentes e comparáveis
 
 **O que manter do código atual:**
 - `src/prompts.py` - Templates de prompts ainda são úteis
 - `src/utils.py` - Funções utilitárias para preparação de dados
-- `src/mlflow_tracking.py` - Tracking continua útil (pode integrar com Llama Stack)
+- `src/mlflow_tracking.py` - Tracking continua útil
+- `src/evaluator.py` - Pode ser adaptado para usar Unitxt como backend
 
-**O que substituir/melhorar:**
-- `src/evaluator.py` - Substituir por wrappers para Llama Stack `/scoring` API
-- Métricas customizadas - Usar `/scoring` API com scoring functions apropriadas
-- Pipeline de avaliação - Usar `/eval` API para execução padronizada
+**O que melhorar/integrar:**
+- `src/evaluator.py` - Integrar com Unitxt para métricas padronizadas
+- Métricas customizadas - Usar Unitxt com métricas apropriadas
+- Pipeline de avaliação - Usar Unitxt para execução padronizada
 
 ---
 
