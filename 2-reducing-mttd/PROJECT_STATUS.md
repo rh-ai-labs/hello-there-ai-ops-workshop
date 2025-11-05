@@ -16,8 +16,9 @@
 1. **Notebook 01** - Data Loading and Exploration ✅
 2. **Notebook 02** - Ground Truth Creation ✅
 3. **Notebook 03** - N-gram Baseline Analysis ✅
-4. **Notebook 04** - LLM-as-a-Judge Evaluation 🔴
-5. **Notebook 05** - LLM Generation and Evaluation 🔴
+4. **Notebook 04** - Embeddings and Semantics Analysis 🔴
+5. **Notebook 05** - LLM-as-a-Judge Evaluation 🔴
+6. **Notebook 06** - LLM Generation and Evaluation 🔴
 
 ---
 
@@ -148,7 +149,53 @@
 
 ### 🔴 Critical Path (Must Have)
 
-#### 📋 Notebook 04: LLM-as-a-Judge Evaluation
+#### 📋 Notebook 04: Embeddings and Semantics Analysis
+
+**Objective:** Analyze semantic similarity between close notes using embeddings to understand how meaning relates to quality.
+
+**Status:** 🔴 **TO DO**
+
+**What it needs to do:**
+1. **Generate embeddings** - Create semantic embeddings for:
+   - Reference dataset close notes (good examples)
+   - Other incidents close notes (bad/regular examples)
+   - Use embedding model (e.g., BGE-M3, Sentence-Transformers)
+
+2. **Compare semantic similarity** - For each close note:
+   - Compare with reference close notes (same category/similar incidents)
+   - Calculate cosine similarity scores
+   - Analyze if good close notes cluster together semantically
+
+3. **Visualize and analyze** - Create visualizations:
+   - t-SNE or PCA plots showing semantic space
+   - Similarity heatmaps
+   - Distribution analysis of similarity scores
+
+4. **Validate quality scores** - Check if:
+   - Good close notes (high quality scores) are semantically closer to references
+   - Bad close notes (low quality scores) are further from references
+   - Semantic similarity correlates with quality
+
+**Deliverables:**
+- Notebook `notebooks/04_semantics_analysis.ipynb`
+- Embeddings for all close notes
+- Semantic similarity analysis results
+- Visualizations showing semantic relationships
+
+**Dependencies:**
+- ✅ `data/reference_close_notes.csv` - **COMPLETE**
+- ✅ `data/other_incidents.csv` - **COMPLETE**
+- ✅ Embedding models (BGE-M3, Sentence-Transformers) - **AVAILABLE**
+
+**Non-functional requirements:**
+- Explain what embeddings and semantic similarity mean in simple terms
+- Show how embeddings capture meaning (not just words)
+- Explain why semantic similarity matters for evaluation
+- Provide interpretation guides for similarity scores
+
+---
+
+#### 📋 Notebook 05: LLM-as-a-Judge Evaluation
 
 **Objective:** Evaluate close notes quality using LLM as an automated judge with structured criteria.
 
@@ -164,7 +211,7 @@
    - Conclusion quality
 
 2. **Compare close notes** - For each close note to evaluate:
-   - Find similar ground truth reference (by category/similarity)
+   - Find similar ground truth reference (by category/similarity from Notebook 04)
    - Send pair to LLM judge: (reference, close_note_to_evaluate)
    - Include incident context (`content`) for better evaluation
    - Get structured JSON scores with explanations
@@ -172,12 +219,13 @@
 3. **Aggregate and visualize results** - Analyze scores across all evaluated close notes
 
 **Deliverables:**
-- Notebook `notebooks/04_llm_as_judge_evaluation.ipynb`
+- Notebook `notebooks/05_llm_as_judge_evaluation.ipynb`
 - Module `src/llm_judge.py` (if needed)
 - Evaluation results with scores and explanations
 
 **Dependencies:**
 - ✅ `data/reference_close_notes.csv` - **COMPLETE**
+- ✅ Notebook 04 (Semantics Analysis) - **NEEDED** (for finding similar references)
 - 🔴 LLM integration (Ollama or other provider) - **NEEDED**
 - 🔴 LLM Client implementation - **NEEDED**
 
@@ -194,7 +242,7 @@
 
 ---
 
-#### 📋 Notebook 05: LLM Generation and Evaluation
+#### 📋 Notebook 06: LLM Generation and Evaluation
 
 **Objective:** Generate close notes for new incidents and evaluate them.
 
@@ -211,18 +259,19 @@
 3. **Generate close notes** - Use LLM to create professional close notes from incident + resolution
 
 4. **Evaluate generated close notes** - Use two methods:
-   - **Semantic similarity** - Compare embeddings with ground truth references
-   - **LLM-as-a-Judge** - Evaluate against ground truth using structured criteria (from Notebook 04)
+   - **Semantic similarity** - Compare embeddings with ground truth references (from Notebook 04)
+   - **LLM-as-a-Judge** - Evaluate against ground truth using structured criteria (from Notebook 05)
 
 **Deliverables:**
-- Notebook `notebooks/05_llm_generation_evaluation.ipynb`
+- Notebook `notebooks/06_llm_generation_evaluation.ipynb`
 - Generated close notes for sample incidents
 - Evaluation scores (semantic + LLM judge)
 - Quality assessment and recommendations
 
 **Dependencies:**
 - ✅ `data/reference_close_notes.csv` - **COMPLETE**
-- 🔴 Notebook 04 (LLM-as-a-Judge) - **NEEDED**
+- ✅ Notebook 04 (Semantics Analysis) - **NEEDED** (for semantic evaluation)
+- ✅ Notebook 05 (LLM-as-a-Judge) - **NEEDED** (for structured evaluation)
 - 🔴 LLM Client implementation - **NEEDED**
 
 **Non-functional requirements:**
@@ -235,10 +284,8 @@
 
 ### 🟡 Optional / Future Work
 
-#### Phase 3: Semantic Baseline Analysis (Optional)
-- Similar to Notebook 03 but using semantic similarity
-- Can be skipped if Notebook 03 already confirms traditional metrics aren't suitable
-- Status: 🟡 **OPTIONAL**
+- Additional analysis and visualizations (as needed)
+- Code cleanup and optimization
 
 ---
 
@@ -252,13 +299,13 @@
 - **Reason:** Not using MLflow for tracking
 
 #### ⚠️ `src/evaluator.py` - **NEEDS REVIEW**
-- **Status:** Contains evaluation functions that may overlap with Notebook 04/05
-- **Action:** Review and refactor to align with LLM-as-a-Judge approach
+- **Status:** Contains evaluation functions that may overlap with Notebook 04/05/06
+- **Action:** Review and refactor to align with semantics analysis and LLM-as-a-Judge approach
 - **Consider:** Keep only functions used by notebooks, remove unused code
 
 #### ⚠️ `src/prompts.py` - **NEEDS REVIEW**
 - **Status:** Contains prompt templates
-- **Action:** Review if prompts align with Notebook 05 requirements
+- **Action:** Review if prompts align with Notebook 06 requirements
 - **Consider:** May need new prompts for LLM-as-a-Judge and generation
 
 #### ⚠️ `src/utils.py` - **GOOD, KEEP**
@@ -273,11 +320,15 @@ At the end of implementation, participants will have:
 
 1. ✅ **Ground truth dataset** (`data/reference_close_notes.csv`) - **COMPLETE**
 2. ✅ **N-gram baseline analysis** (Notebook 03) - **COMPLETE**
-3. 🔴 **LLM-as-a-Judge evaluation** (Notebook 04) - **TO DO**
+3. 🔴 **Semantics analysis** (Notebook 04) - **TO DO**
+   - Generate embeddings for all close notes
+   - Analyze semantic similarity between good and bad close notes
+   - Visualize semantic relationships
+4. 🔴 **LLM-as-a-Judge evaluation** (Notebook 05) - **TO DO**
    - Structured evaluation with 6 criteria (0-5 scores)
    - Comparison: existing close notes vs ground truth
    - Explainable scores with reasoning
-4. 🔴 **LLM generation and evaluation** (Notebook 05) - **TO DO**
+5. 🔴 **LLM generation and evaluation** (Notebook 06) - **TO DO**
    - Generate close notes for new incidents
    - Evaluate using semantic similarity + LLM-as-a-Judge
    - Quality assessment and recommendations
@@ -289,8 +340,8 @@ At the end of implementation, participants will have:
 ### ✅ Resolved
 1. **Evaluation Framework:** Unitxt selected for n-gram metrics
 2. **Ground Truth Approach:** Extract high-quality close notes as references
-3. **Evaluation Method:** LLM-as-a-Judge as main evaluation (Notebook 04)
-4. **Workflow:** 5 notebooks following clear progression
+3. **Evaluation Method:** Semantics analysis (Notebook 04) + LLM-as-a-Judge (Notebook 05)
+4. **Workflow:** 6 notebooks following clear progression
 
 ### 🔴 Pending
 1. **LLM Integration:**
@@ -324,16 +375,23 @@ At the end of implementation, participants will have:
 - N-gram comparison: Tests if n-grams can distinguish good from bad close notes
 - Method: Compare n-gram scores from reference dataset (good) vs other incidents dataset (bad)
 - Result: If scores are similar, confirms n-grams cannot distinguish quality
-- Conclusion: Need semantic evaluation (LLM-as-a-Judge) which can evaluate meaning and quality
+- Conclusion: Need semantic evaluation which can evaluate meaning and quality
 
-**Main Evaluation (Notebook 04):**
+**Semantics Analysis (Notebook 04):**
+- Embeddings: Generate semantic representations for all close notes
+- Similarity: Compare good vs bad close notes in semantic space
+- Validation: Check if semantic similarity correlates with quality scores
+- Visualization: Show semantic relationships and clustering
+
+**Main Evaluation (Notebook 05):**
 - LLM-as-a-Judge: Structured evaluation with 6 criteria
 - Compares: close notes (existing/generated) vs ground truth references
 - Provides: Scores (0-5) + explanations for each criterion
+- Uses: Semantic similarity from Notebook 04 to find similar references
 
-**Generation & Evaluation (Notebook 05):**
+**Generation & Evaluation (Notebook 06):**
 - Generate: Resolution + close notes for new incidents
-- Evaluate: Semantic similarity + LLM-as-a-Judge
+- Evaluate: Semantic similarity (from Notebook 04) + LLM-as-a-Judge (from Notebook 05)
 - Assess: Quality and provide recommendations
 
 ---
@@ -348,13 +406,14 @@ At the end of implementation, participants will have:
 - [x] Project status refactored (removed unused tools, aligned with workflow)
 
 ### 🔴 In Progress / Next
-- [ ] Notebook 04: LLM-as-a-Judge evaluation
-- [ ] Notebook 05: LLM generation and evaluation
+- [ ] Notebook 04: Embeddings and Semantics Analysis
+- [ ] Notebook 05: LLM-as-a-Judge evaluation
+- [ ] Notebook 06: LLM generation and evaluation
 - [ ] LLM Client implementation (`src/llm_client.py`)
 
 ### 🟡 Optional / Future
-- [ ] Semantic baseline analysis (Notebook 03 alternative)
 - [ ] Code cleanup and refactoring
+- [ ] Additional analysis and visualizations
 
 ---
 
@@ -369,8 +428,8 @@ At the end of implementation, participants will have:
 ### Code Cleanup Needed:
 - ⚠️ `src/mlflow_tracking.py` - Remove or deprecate
 - ⚠️ Remove MLflow/Langfuse references from `requirements.txt` (if any)
-- ⚠️ Update `src/evaluator.py` to align with Notebook 04/05 approach
-- ⚠️ Review `src/prompts.py` for Notebook 05 compatibility
+- ⚠️ Update `src/evaluator.py` to align with Notebook 04/05/06 approach
+- ⚠️ Review `src/prompts.py` for Notebook 06 compatibility
 
 ---
 

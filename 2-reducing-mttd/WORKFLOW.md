@@ -53,16 +53,49 @@
    
 3. **Compare results** - Analyze if both datasets show similar patterns
 
-**Hypothesis:** Low n-gram scores confirm that incident descriptions and close notes use different language, validating that n-grams aren't suitable for evaluation.
+**Hypothesis:** N-grams are NOT useful for evaluating/differentiating between good and bad close notes. If scores are similar between good and bad, it confirms n-grams cannot distinguish quality.
 
 **Output:**
 - N-gram comparison results
 - Visualization comparing both datasets
-- Conclusion: N-grams are not suitable → proceed to LLM-as-a-Judge
+- Conclusion: N-grams are not suitable → proceed to Semantics Analysis (Notebook 04)
 
 ---
 
-## Notebook 4: LLM-as-a-Judge Evaluation
+## Notebook 4: Embeddings and Semantics Analysis
+
+**Objective:** Analyze semantic similarity between close notes using embeddings to understand how meaning relates to quality.
+
+**Steps:**
+1. **Generate embeddings** - Create semantic embeddings for:
+   - Reference dataset close notes (good examples)
+   - Other incidents close notes (bad/regular examples)
+   - Use embedding model (e.g., BGE-M3, Sentence-Transformers)
+
+2. **Compare semantic similarity** - For each close note:
+   - Compare with reference close notes (same category/similar incidents)
+   - Calculate cosine similarity scores
+   - Analyze if good close notes cluster together semantically
+
+3. **Visualize and analyze** - Create visualizations:
+   - t-SNE or PCA plots showing semantic space
+   - Similarity heatmaps
+   - Distribution analysis of similarity scores
+
+4. **Validate quality scores** - Check if:
+   - Good close notes (high quality scores) are semantically closer to references
+   - Bad close notes (low quality scores) are further from references
+   - Semantic similarity correlates with quality
+
+**Output:**
+- Embeddings for all close notes
+- Semantic similarity analysis results
+- Visualizations showing semantic relationships
+- Validation of quality scores using semantic similarity
+
+---
+
+## Notebook 5: LLM-as-a-Judge Evaluation
 
 **Objective:** Evaluate close notes quality using LLM as an automated judge with structured criteria.
 
@@ -76,8 +109,9 @@
    - Conclusion quality
 
 2. **Compare close notes** - For each close note to evaluate:
-   - Find similar ground truth reference (by category/similarity)
+   - Find similar ground truth reference (using semantic similarity from Notebook 04)
    - Send pair to LLM judge: (reference, close_note_to_evaluate)
+   - Include incident context (`content`) for better evaluation
    - Get structured scores (0-5) with explanations
 
 3. **Aggregate results** - Analyze scores across all evaluated close notes
@@ -86,10 +120,11 @@
 - Evaluation scores for each close note
 - Comparison: existing close notes vs ground truth
 - Insights about quality differences
+- Explainable scores with reasoning
 
 ---
 
-## Notebook 5: LLM Generation and Evaluation
+## Notebook 6: LLM Generation and Evaluation
 
 **Objective:** Generate close notes for new incidents and evaluate them.
 
@@ -104,8 +139,8 @@
 3. **Generate close notes** - Use LLM to create professional close notes from incident + resolution
 
 4. **Evaluate generated close notes** - Use two methods:
-   - **Semantic similarity** - Compare embeddings with ground truth references
-   - **LLM-as-a-Judge** - Evaluate against ground truth using structured criteria
+   - **Semantic similarity** - Compare embeddings with ground truth references (from Notebook 04)
+   - **LLM-as-a-Judge** - Evaluate against ground truth using structured criteria (from Notebook 05)
 
 **Output:**
 - Generated close notes for new incidents
@@ -120,6 +155,8 @@
 Dataset → Explore → Create Ground Truth → Baseline Test (N-grams) 
                                               ↓
                                           (Low scores confirm)
+                                              ↓
+                                    Semantics Analysis (Embeddings)
                                               ↓
                                     LLM-as-a-Judge Evaluation
                                               ↓
@@ -136,9 +173,9 @@ Dataset → Explore → Create Ground Truth → Baseline Test (N-grams)
 - Used to compare against other close notes (existing or generated)
 
 **Evaluation Methods:**
-1. **N-gram (Baseline)** - Tests if word overlap is useful (not suitable)
-2. **Semantic Similarity** - Compares meaning using embeddings
-3. **LLM-as-a-Judge** - Structured evaluation with multiple criteria (main method)
+1. **N-gram (Baseline)** - Tests if word overlap can distinguish good from bad (not suitable)
+2. **Semantic Similarity** - Compares meaning using embeddings (Notebook 04)
+3. **LLM-as-a-Judge** - Structured evaluation with multiple criteria (Notebook 05, main method)
 
 **Why This Approach:**
 - Each incident has different context → need semantic evaluation, not just word matching
@@ -152,6 +189,7 @@ Dataset → Explore → Create Ground Truth → Baseline Test (N-grams)
 
 - Ground truth dataset created with high-quality examples
 - Baseline analysis confirms n-grams aren't suitable
+- Semantics analysis shows good close notes cluster together semantically
 - LLM-as-a-Judge provides consistent, explainable evaluations
 - Generated close notes achieve high scores (≥4.0) on evaluation criteria
 - Demonstrated improvement over generic LLM outputs
