@@ -15,7 +15,7 @@ Este workshop apresenta uma série de exercícios práticos que demonstram como 
 
 ## 📚 Módulos do Workshop
 
-### [HANDS-ON-1] IA 101 na Prática
+### 1. IA 101 na Prática
 
 **Objetivo:** Introdução aos conceitos fundamentais de IA e ferramentas básicas.
 
@@ -31,7 +31,7 @@ Este workshop apresenta uma série de exercícios práticos que demonstram como 
 
 ---
 
-### [Módulo 2] Redução de MTTD: Avaliação e Geração de Close Notes com IA
+### 2. Avaliação e Geração de Close Notes com IA
 
 **Objetivo:** Avaliar e gerar close notes (notas de encerramento) de alta qualidade para incidentes de TI usando diferentes métodos de avaliação com IA.
 
@@ -60,7 +60,7 @@ Este workshop apresenta uma série de exercícios práticos que demonstram como 
 
 ---
 
-### [Módulo 3] Redução de MTTR: Busca por Similaridade entre Incidentes
+### 3. Redução de MTTR: Busca por Similaridade entre Incidentes
 
 **Objetivo:** Demonstrar como identificar incidentes similares usando busca semântica para reduzir o MTTR (Mean Time To Resolve).
 
@@ -88,7 +88,7 @@ Este workshop apresenta uma série de exercícios práticos que demonstram como 
 
 ---
 
-### [Módulo 4] Análise Preditiva: Identificando Mudanças que Geram Incidentes
+### 4. Análise Preditiva: Identificando Mudanças que Geram Incidentes
 
 **Objetivo:** Demonstrar como um modelo pode aprender a avaliar alterações em código, configuração ou infraestrutura e estimar o risco de cada mudança gerar um incidente.
 
@@ -130,7 +130,7 @@ Este workshop apresenta uma série de exercícios práticos que demonstram como 
 
 ---
 
-### [Módulo 5] Agentes Autônomos: Integrando Análise + Ação
+### 5. Agentes Autônomos: Integrando Análise + Ação
 
 **Objetivo:** Construir um agente que consiga tomar ações no contexto de operações de TI para remediar o ambiente automaticamente.
 
@@ -149,133 +149,3 @@ Este workshop apresenta uma série de exercícios práticos que demonstram como 
 - Técnicas de feedback e aprendizado contínuo
 
 ---
-
-## 🚀 Quick Start
-
-### Pré-requisitos
-
-1. **Python Environment**
-   ```bash
-   # Usando uv (recomendado)
-   uv sync
-   
-   # Ou usando pip
-   pip install -r requirements.txt
-   ```
-
-2. **Ollama (para LLM-as-a-Judge)**
-   ```bash
-   # Instalar Ollama: https://ollama.ai
-   # Iniciar servidor
-   ollama serve
-   
-   # Baixar modelo
-   ollama pull llama3.2:3b
-   ```
-
-3. **Jupyter Notebook**
-   ```bash
-   jupyter notebook
-   ```
-
-### Estrutura do Repositório
-
-```
-hello-there-ai-ops-workshop/
-├── 2-reducing-mttd/          # Módulo 2: Redução de MTTD
-│   ├── notebooks/            # Notebooks do módulo
-│   ├── data/                  # Datasets gerados
-│   ├── src/                   # Código fonte
-│   └── README.md              # Documentação do módulo
-├── docs/                      # Documentação geral
-├── scripts/                   # Scripts auxiliares
-├── pyproject.toml            # Dependências do projeto
-└── README.md                  # Este arquivo
-```
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-**Core:**
-- Python 3.11+
-- Jupyter Notebooks
-- Pandas, NumPy
-- Matplotlib, Seaborn
-
-**IA/ML:**
-- **Unitxt** - Framework de avaliação (n-gram metrics, LLM-as-a-Judge)
-- **Sentence Transformers** - Modelos de embeddings
-- **Ollama** - Servidor local de LLM
-- **OpenShift AI** - Plataforma de IA empresarial
-
-**Avaliação:**
-- ROUGE (via Unitxt)
-- BLEU (via Unitxt)
-- Métricas customizadas
-
----
-
-## 📊 Status dos Módulos
-
-| Módulo | Status | Descrição |
-|--------|--------|-----------|
-| HANDS-ON-1 | ✅ | IA 101 na Prática |
-| Módulo 2 | ✅ | Redução de MTTD - Avaliação de Close Notes |
-| Módulo 3 | 🔴 | Redução de MTTR - Busca por Similaridade |
-| Módulo 4 | 🔴 | Análise Preditiva - Risco de Mudanças |
-| Módulo 5 | 🔴 | Agentes Autônomos - Análise + Ação |
-
-**Legenda:**
-- ✅ Completo
-- 🟡 Em progresso
-- 🔴 Planejado
-
----
-
-## 🎓 Conceitos-Chave do Workshop
-
-### Métricas de Operações de TI
-- **MTTR (Mean Time To Resolve):** Tempo médio para resolver um incidente
-- **MTTD (Mean Time To Detect):** Tempo médio para detectar um incidente
-
-### Técnicas de IA
-- **Embeddings:** Representações matemáticas de texto que capturam significado
-- **RAG (Retrieval-Augmented Generation):** Técnica que combina busca e geração
-- **LLM-as-a-Judge:** Uso de LLM para avaliação estruturada
-- **Fine-tuning:** Ajuste de modelos pré-treinados para tarefas específicas
-- **Agentes Autônomos:** Sistemas que tomam decisões e ações automaticamente
-
-### Métodos de Avaliação
-- **N-gram Metrics:** Métricas de sobreposição de palavras (ROUGE, BLEU)
-- **Semantic Similarity:** Comparação de significado usando embeddings
-- **Structured Evaluation:** Avaliação com múltiplos critérios usando LLM
-
----
-
-## 📝 Notas Importantes
-
-- **Cache folders** (`inference_engine_cache/`) são ignorados pelo git (ver `.gitignore`)
-- **Arquivos de dados** em `data/` são gerados pelos notebooks
-- **Foco educacional:** Todos os notebooks incluem explicações para público não técnico
-- **Execução local:** Os exercícios podem ser executados localmente usando Ollama
-
----
-
-## 🔗 Links Úteis
-
-- [OpenShift AI Documentation](https://docs.redhat.com/en/openshift-ai)
-- [Ollama](https://ollama.ai)
-- [Unitxt Documentation](https://unitxt.ai)
-- [Jupyter Notebooks](https://jupyter.org)
-
----
-
-## 📧 Contato e Suporte
-
-Para dúvidas ou sugestões sobre o workshop, consulte a documentação de cada módulo ou entre em contato com a equipe do projeto.
-
----
-
-**Última Atualização:** Dezembro 2024
-
