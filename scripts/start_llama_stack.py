@@ -248,29 +248,15 @@ def main():
     print_status("Press Ctrl+C to stop the server", "info")
     print("")
     
-    # Change to project directory for running llama stack
-    os.chdir(project_dir)
-    
-    # Try to run Llama Stack using uv run (preferred) or directly
     # uv run must be executed from root directory where pyproject.toml is
-    if check_command("llama", "llama"):
-        run_command("llama stack run starter", check=False)
-    elif check_command("uv", "uv"):
-        try:
-            # Run from root directory
-            run_command(f"cd {root_dir} && uv run llama stack run starter", check=False)
-        except Exception as e:
-            print_status("Could not run llama-stack via uv run", "warning")
-            # Fallback to direct Python execution
-            venv_python = venv_path / "bin" / "python" if sys.platform != "win32" else venv_path / "Scripts" / "python.exe"
-            if venv_python.exists():
-                run_command(f"{venv_python} -m llama_stack run starter", check=False)
-            else:
-                print_status("Could not find llama-stack CLI", "error")
-                print_status(f"Try running: cd {root_dir} && uv sync", "info")
-                sys.exit(1)
-    else:
-        print_status("Could not find llama-stack CLI or uv", "error")
+    os.chdir(root_dir)
+    
+    # Run Llama Stack using uv run (preferred method)
+    # This ensures the correct virtual environment is used
+    try:
+        run_command("uv run llama stack run starter", check=False)
+    except Exception as e:
+        print_status(f"Failed to start llama-stack: {e}", "error")
         print_status(f"Try running: cd {root_dir} && uv sync", "info")
         sys.exit(1)
 
