@@ -22,19 +22,8 @@ mlflow>=2.8.0
 rouge-score>=0.1.2
 nltk>=3.8.0
 scikit-learn>=1.3.0
-unitxt>=1.0.0  # Standardized evaluation framework
-
-# TrustyAI (Red Hat AI Services)
-# trustyai>=0.3.0  # Uncomment when available in your environment
-
-# Optional: Langfuse for LLM observability
-# langfuse>=2.0.0  # Uncomment if using Langfuse
-
-# Llama Stack for evaluation APIs - DEPRECATED: Replaced by Unitxt
-# llama-stack>=0.1.0
-# opentelemetry-api>=1.20.0
-# opentelemetry-sdk>=1.20.0
-# opentelemetry-exporter-otlp-proto-http>=1.20.0
+unitxt>=1.0.0
+sacrebleu>=2.0.0
 
 # Ollama client for local LLM serving
 ollama>=0.1.0
@@ -42,8 +31,39 @@ ollama>=0.1.0
 # HTTP client for API requests
 requests>=2.31.0
 
+# Llama Stack for evaluation APIs
+llama-stack>=0.3.1
+opentelemetry-api>=1.38.0
+opentelemetry-sdk>=1.38.0
+opentelemetry-exporter-otlp-proto-http>=1.38.0
+
+# Llama Stack optional provider dependencies
+# These are required because llama-stack starter distribution initializes all providers
+# LLM Provider SDKs
+together>=1.5.30
+botocore>=1.40.72
+boto3>=1.40.65
+anthropic>=0.72.0
+openai>=2.7.1
+google-generativeai>=0.8.5
+fireworks-ai>=0.19.20
+groq>=0.33.0
+sambanova>=1.1.5
+
+# Vector Store Providers
+faiss-cpu>=1.12.0
+sqlite-vec>=0.1.6
+
+# Tool Runtime Providers
+mcp>=1.20.0
+
+# Evaluation Providers
+autoevals>=0.0.130
+
 # Utilities
 python-dotenv>=1.0.0
 tqdm>=4.65.0
-nbstripout>=0.6.0  # Strip Jupyter notebook outputs for cleaner git diffs
+nbstripout>=0.6.0
 
+# Optional: Langfuse for LLM observability
+# langfuse>=2.0.0

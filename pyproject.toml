@@ -61,6 +61,19 @@ dependencies = [
     "opentelemetry-api>=1.38.0",
     "opentelemetry-sdk>=1.38.0",
     "opentelemetry-exporter-otlp-proto-http>=1.38.0",
+    "together>=1.5.30",
+    "botocore>=1.40.72",
+    "boto3>=1.40.65",
+    "anthropic>=0.72.0",
+    "faiss-cpu>=1.12.0",
+    "openai>=2.7.1",
+    "google-generativeai>=0.8.5",
+    "fireworks-ai>=0.19.20",
+    "groq>=0.33.0",
+    "sambanova>=1.1.5",
+    "sqlite-vec>=0.1.6",
+    "mcp>=1.20.0",
+    "autoevals>=0.0.130",
 ]
 
 [project.optional-dependencies]
