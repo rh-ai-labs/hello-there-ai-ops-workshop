@@ -37,8 +37,8 @@
 
 ---
 
-### ✅ Notebook 03: LlamaStack Core Features
-**Status:** ✅ Exists  
+### 📝 Notebook 03: LlamaStack Core Features
+**Status:** To be created  
 **Focus:** Chat, RAG, MCP, Safety, Eval basics
 
 **Content:**
@@ -192,7 +192,7 @@
    - Custom Wikipedia search tool
    - Custom IT operations tools example
    - All working correctly
-2. **✅ Create Notebook 03** - LlamaStack features - **COMPLETED**
+2. **📝 Create Notebook 03** - LlamaStack features - **TODO**
 3. **📝 Create Notebook 04** - Advanced agent capabilities - **TODO**
 4. **📝 Create Notebook 05** - Decision making (if needed) - **TODO**
 5. **📝 Create Notebook 06** - Learning and feedback (if needed) - **TODO**
