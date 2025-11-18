@@ -15,21 +15,30 @@
 ---
 
 ### ✅ Notebook 02: Building a Simple Agent with Tools
-**Status:** Exists (needs update for SDK)  
-**Focus:** Basic agent implementation
+**Status:** ✅ Complete - Updated to use Python SDK  
+**Focus:** Basic agent implementation with custom tools
 
 **Content:**
 - Setting up LlamaStack connection
-- Creating an agent with tools
-- Testing agent execution
-- Understanding agent responses
+- Creating a custom Wikipedia search tool (no API key required)
+- Creating an agent with custom tools
+- Testing agent execution with AgentEventLogger
+- Understanding tool calls and responses
+- Creating custom client-side tools (IT operations example)
 
-**Update needed:** Refactor to use Python SDK instead of direct HTTP calls
+**Completed Updates:**
+- ✅ Refactored to use Python SDK (Agent class from llama-stack-client)
+- ✅ Replaced DuckDuckGo with Wikipedia search (more reliable, no API key)
+- ✅ Simplified setup cell (removed installation logic, assumes requirements.txt)
+- ✅ Fixed inspection code (removed get_session calls)
+- ✅ Improved Wikipedia search function (uses search API first)
+- ✅ Added custom IT tools example (check_service_status, restart_service)
+- ✅ All custom tools working correctly with Agent class
 
 ---
 
-### 📝 Notebook 03: LlamaStack Core Features
-**Status:** To be created  
+### ✅ Notebook 03: LlamaStack Core Features
+**Status:** ✅ Exists  
 **Focus:** Chat, RAG, MCP, Safety, Eval basics
 
 **Content:**
@@ -178,11 +187,30 @@
 
 ## 📋 Implementation Plan
 
-1. **Update Notebook 02** - Refactor to use Python SDK
-2. **Create Notebook 03** - LlamaStack features (based on test_comprehensive.py)
-3. **Create Notebook 04** - Advanced agent capabilities
-4. **Create Notebook 05** - Decision making (if needed)
-5. **Create Notebook 06** - Learning and feedback (if needed)
+1. **✅ Update Notebook 02** - Refactor to use Python SDK - **COMPLETED**
+   - Uses Agent class from llama-stack-client
+   - Custom Wikipedia search tool
+   - Custom IT operations tools example
+   - All working correctly
+2. **✅ Create Notebook 03** - LlamaStack features - **COMPLETED**
+3. **📝 Create Notebook 04** - Advanced agent capabilities - **TODO**
+4. **📝 Create Notebook 05** - Decision making (if needed) - **TODO**
+5. **📝 Create Notebook 06** - Learning and feedback (if needed) - **TODO**
+
+## 🎯 Recent Changes (Latest Session)
+
+### Notebook 02 Updates:
+- **Replaced DuckDuckGo with Wikipedia**: More reliable, no API key, works better with small models
+- **Simplified setup**: Removed complex installation logic, assumes requirements.txt is used
+- **Fixed errors**: Removed get_session() calls, cleaned up exception handling
+- **Improved tool function**: Wikipedia search now uses search API first for better results
+- **Verified functionality**: All custom tools (Wikipedia, calculator, time, IT ops) working correctly
+
+### Key Learnings:
+- Custom tools work well with Agent class when properly formatted (RST-style docstrings)
+- Small models (llama3.2:3b) can use tools effectively with clear instructions
+- Wikipedia API is more reliable than DuckDuckGo for educational purposes
+- AgentEventLogger provides good visual feedback for tool usage
 
 ---
 
