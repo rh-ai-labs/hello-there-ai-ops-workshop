@@ -196,19 +196,24 @@ class ToolRegistry:
     
     def get_tools_for_llamastack(self) -> list[Dict[str, Any]]:
         """
-        Get tools in llamastack format.
+        Get tools in llamastack format (OpenAI function calling format).
         
         Returns:
-            List of tool definitions for llamastack API
+            List of tool definitions for llamastack API in OpenAI format
         """
-        return [
-            {
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": tool.parameters
+        tools = []
+        for tool in self._tools.values():
+            # LlamaStack expects OpenAI function calling format
+            tool_def = {
+                "type": "function",
+                "function": {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": tool.parameters
+                }
             }
-            for tool in self._tools.values()
-        ]
+            tools.append(tool_def)
+        return tools
     
     def execute_tool(self, tool_name: str, **kwargs) -> str:
         """

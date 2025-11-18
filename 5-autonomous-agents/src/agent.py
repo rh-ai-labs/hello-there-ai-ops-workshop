@@ -7,8 +7,15 @@ reasoning (LLM) with action-taking (tools) using llamastack.
 
 from typing import Dict, List, Optional, Any
 import os
-import json
-import requests
+import time
+
+# Import llamastack SDK
+try:
+    from llama_stack_client import LlamaStackClient
+except ImportError:
+    raise ImportError(
+        "llama_stack_client is required. Install it with: pip install llama-stack-client"
+    )
 
 # Handle both relative and absolute imports
 try:
@@ -27,50 +34,8 @@ class AutonomousAgent:
     It follows a ReAct pattern: Reasoning + Acting.
     """
     
-    def __init__(
-        self,
-        tool_registry: ToolRegistry,
-        memory: Optional[AgentMemory] = None,
-        llamastack_url: Optional[str] = None,
-        agent_id: Optional[str] = None,
-        verbose: bool = True
-    ):
-        """
-        Initialize autonomous agent.
-        
-        Args:
-            tool_registry: Registry containing available tools
-            memory: Optional memory system for learning
-            llamastack_url: URL of llamastack server (default: http://localhost:8321)
-            agent_id: Optional agent ID if agent already exists in llamastack
-            verbose: Whether to print detailed execution logs
-        """
-        self.tool_registry = tool_registry
-        self.memory = memory or AgentMemory()
-        self.verbose = verbose
-        
-        # Initialize llamastack connection
-        self.llamastack_url = llamastack_url or os.getenv("LLAMA_STACK_URL", "http://localhost:8321")
-        self.agent_id = agent_id
-        
-        # Create or get agent in llamastack
-        if not self.agent_id:
-            self.agent_id = self._create_agent()
-        else:
-            self._verify_agent_exists()
-    
-    def _create_agent(self) -> str:
-        """
-        Create an agent in llamastack.
-        
-        Returns:
-            Agent ID
-        """
-        # Get tools in llamastack format
-        tools = self.tool_registry.get_tools_for_llamastack()
-        
-        # Agent instructions
-        instructions = """You are an autonomous IT operations agent. Your job is to monitor IT services, identify problems, and take corrective actions.
+    # Default agent instructions
+    DEFAULT_INSTRUCTIONS = """You are an autonomous IT operations agent. Your job is to monitor IT services, identify problems, and take corrective actions.
 
 When analyzing IT services:
 1. First, check the status of services to understand the current state
@@ -81,64 +46,137 @@ When analyzing IT services:
 
 Always be careful and thoughtful. Only take actions that are necessary and safe.
 If you're unsure about an action, explain your reasoning."""
-        
-        # Create agent via llamastack API
-        payload = {
-            "instructions": instructions,
-            "tools": tools,
-            "model": {
-                "provider": "ollama",
-                "model": "llama3.2:3b"
-            }
-        }
-        
-        try:
-            response = requests.post(
-                f"{self.llamastack_url}/v1/agents",
-                json=payload,
-                headers={"Content-Type": "application/json"},
-                timeout=30
-            )
-            response.raise_for_status()
-            agent_data = response.json()
-            agent_id = agent_data.get("id")
-            
-            if self.verbose:
-                print(f"✅ Created agent in llamastack: {agent_id}")
-            
-            return agent_id
-        except requests.exceptions.RequestException as e:
-            if self.verbose:
-                print(f"⚠️  Could not connect to llamastack server at {self.llamastack_url}")
-                print(f"   Error: {e}")
-                print(f"   Falling back to local agent execution")
-            # Fallback: return a placeholder ID for local execution
-            return "local-agent"
     
-    def _verify_agent_exists(self):
-        """Verify that the agent exists in llamastack"""
-        try:
-            response = requests.get(
-                f"{self.llamastack_url}/v1/agents/{self.agent_id}",
-                timeout=10
-            )
-            response.raise_for_status()
-        except requests.exceptions.RequestException:
-            if self.verbose:
-                print(f"⚠️  Agent {self.agent_id} not found, will use local execution")
-    
-    def _execute_tool_locally(self, tool_name: str, tool_input: Dict[str, Any]) -> str:
+    def __init__(
+        self,
+        tool_registry: ToolRegistry,
+        memory: Optional[AgentMemory] = None,
+        llamastack_url: Optional[str] = None,
+        model: str = "ollama/llama3.2:3b",
+        instructions: Optional[str] = None,
+        verbose: bool = True
+    ):
         """
-        Execute a tool locally (fallback when llamastack is not available).
+        Initialize autonomous agent.
         
         Args:
-            tool_name: Name of the tool to execute
-            tool_input: Input parameters for the tool
+            tool_registry: Registry containing available tools
+            memory: Optional memory system for learning
+            llamastack_url: URL of llamastack server (default: http://localhost:8321)
+            model: Model identifier (default: ollama/llama3.2:3b)
+            instructions: Custom agent instructions (uses default if not provided)
+            verbose: Whether to print detailed execution logs
+        """
+        self.tool_registry = tool_registry
+        self.memory = memory or AgentMemory()
+        self.verbose = verbose
+        
+        # Initialize llamastack client
+        self.llamastack_url = llamastack_url or os.getenv("LLAMA_STACK_URL", "http://localhost:8321")
+        self.client = LlamaStackClient(base_url=self.llamastack_url)
+        
+        # Verify connection
+        self._verify_connection()
+        
+        # Get tools and instructions
+        tools = self.tool_registry.get_tools_for_llamastack()
+        instructions = instructions or self.DEFAULT_INSTRUCTIONS
+        
+        # Create agent via API to get agent_id
+        agent_response = self.client.alpha.agents.create(
+            agent_config={
+                "model": model,
+                "instructions": instructions,
+                "tools": tools
+            }
+        )
+        
+        self.agent_id = agent_response.agent_id
+        
+        if self.verbose:
+            print(f"✅ Initialized agent with model: {model}")
+            print(f"   Agent ID: {self.agent_id}")
+    
+    def _verify_connection(self):
+        """Verify llamastack server is available."""
+        try:
+            self.client.models.list()
+        except Exception as e:
+            raise ConnectionError(
+                f"Cannot connect to llamastack server at {self.llamastack_url}. "
+                f"Please ensure llamastack is running. Error: {e}"
+            )
+    
+    def _extract_content_from_chunk(self, chunk) -> tuple[str, Optional[str], List, bool]:
+        """
+        Extract content, turn_id, tool_calls, and completion status from a streaming chunk.
+        
+        Args:
+            chunk: AgentTurnResponseStreamChunk object
             
         Returns:
-            Tool execution result
+            Tuple of (content, turn_id, tool_calls, is_complete)
         """
-        return self.tool_registry.execute_tool(tool_name, **tool_input)
+        content = ""
+        turn_id = None
+        tool_calls = []
+        is_complete = False
+        
+        if not (hasattr(chunk, 'event') and chunk.event):
+            return content, turn_id, tool_calls, is_complete
+        
+        event = chunk.event
+        
+        # Extract payload (contains the actual data)
+        payload = self._get_payload_dict(event)
+        if not payload:
+            return content, turn_id, tool_calls, is_complete
+        
+        # Extract content from delta (streaming chunks)
+        if 'delta' in payload and payload['delta']:
+            delta = payload['delta']
+            delta_dict = self._to_dict(delta)
+            if delta_dict:
+                # Try different content field names
+                if 'content' in delta_dict and delta_dict['content']:
+                    content = str(delta_dict['content'])
+                elif 'text' in delta_dict and delta_dict['text']:
+                    content = str(delta_dict['text'])
+        
+        # Extract turn_id
+        if 'turn_id' in payload and payload['turn_id']:
+            turn_id = payload['turn_id']
+        elif hasattr(event, 'turn_id') and event.turn_id:
+            turn_id = event.turn_id
+        
+        # Extract tool calls
+        if 'tool_calls' in payload and payload['tool_calls']:
+            tool_calls = payload['tool_calls'] if isinstance(payload['tool_calls'], list) else [payload['tool_calls']]
+        
+        # Check for completion
+        event_type = payload.get('event_type') or getattr(event, 'event_type', None)
+        if event_type in ['turn_complete', 'turn_end', 'complete', 'done']:
+            is_complete = True
+        
+        return content, turn_id, tool_calls, is_complete
+    
+    def _get_payload_dict(self, event) -> Optional[Dict]:
+        """Extract payload dictionary from event."""
+        if not hasattr(event, 'payload') or not event.payload:
+            return None
+        
+        payload = event.payload
+        return self._to_dict(payload)
+    
+    def _to_dict(self, obj) -> Optional[Dict]:
+        """Convert object to dictionary if possible."""
+        if isinstance(obj, dict):
+            return obj
+        if hasattr(obj, 'dict'):
+            return obj.dict()
+        if hasattr(obj, '__dict__'):
+            return obj.__dict__
+        return None
     
     def _run_with_llamastack(self, task: str, context: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -151,89 +189,64 @@ If you're unsure about an action, explain your reasoning."""
         Returns:
             Dictionary with execution results
         """
-        # Build input with context
-        input_text = task
-        if context:
-            input_text = f"Context: {context}\n\nTask: {task}"
-        
-        # Create a turn (interaction) with the agent
-        payload = {
-            "input": input_text
-        }
+        # Build messages
+        input_text = f"Context: {context}\n\nTask: {task}" if context else task
+        messages = [{"role": "user", "content": input_text}]
         
         try:
-            # Create a session/thread for this interaction
-            session_response = requests.post(
-                f"{self.llamastack_url}/v1/agents/{self.agent_id}/sessions",
-                json={},
-                headers={"Content-Type": "application/json"},
-                timeout=30
+            # Create agent session
+            session_name = f"session-{int(time.time())}"
+            session_response = self.client.alpha.agents.session.create(
+                agent_id=self.agent_id,
+                session_name=session_name
             )
-            session_response.raise_for_status()
-            session_data = session_response.json()
-            session_id = session_data.get("id")
+            session_id = session_response.session_id
             
-            # Create a turn in the session
-            turn_response = requests.post(
-                f"{self.llamastack_url}/v1/agents/{self.agent_id}/sessions/{session_id}/turns",
-                json=payload,
-                headers={"Content-Type": "application/json"},
-                timeout=300  # 5 minutes for agent execution
+            if self.verbose:
+                print(f"📝 Created agent session: {session_id}")
+            
+            # Create turn and process streaming response
+            turn_stream = self.client.alpha.agents.turn.create(
+                agent_id=self.agent_id,
+                session_id=session_id,
+                messages=messages,
+                stream=True
             )
-            turn_response.raise_for_status()
-            turn_data = turn_response.json()
             
-            # Get the result
-            result = turn_data.get("output", "")
+            # Process streaming chunks
+            result = ""
+            turn_id = None
+            tool_calls = []
             
-            # Extract tool calls if any
-            tool_calls = turn_data.get("tool_calls", [])
+            for chunk in turn_stream:
+                chunk_content, chunk_turn_id, chunk_tool_calls, is_complete = self._extract_content_from_chunk(chunk)
+                
+                result += chunk_content
+                if chunk_turn_id and not turn_id:
+                    turn_id = chunk_turn_id
+                if chunk_tool_calls:
+                    tool_calls.extend(chunk_tool_calls)
+                
+                if is_complete:
+                    break
             
             return {
                 "success": True,
-                "result": result,
+                "result": result.strip() or "Task completed (no output received)",
                 "session_id": session_id,
-                "turn_id": turn_data.get("id"),
+                "turn_id": turn_id,
                 "tool_calls": tool_calls
             }
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
                 "result": None
             }
     
-    def _run_locally(self, task: str, context: Optional[str] = None) -> Dict[str, Any]:
-        """
-        Run task using local execution (fallback).
-        
-        This implements a simple agent loop without llamastack server.
-        
-        Args:
-            task: Description of the task to perform
-            context: Optional additional context
-            
-        Returns:
-            Dictionary with execution results
-        """
-        # Simple local agent implementation
-        # In a real scenario, you'd use ollama directly or another LLM client
-        
-        input_text = task
-        if context:
-            input_text = f"Context: {context}\n\nTask: {task}"
-        
-        # For now, return a placeholder
-        # In notebooks, we'll show how to use ollama directly for local execution
-        return {
-            "success": True,
-            "result": f"Local agent execution for: {input_text}\n(Use llamastack server for full agent capabilities)",
-            "mode": "local"
-        }
-    
     def run(self, task: str, context: Optional[str] = None) -> Dict[str, Any]:
         """
-        Execute a task.
+        Execute a task using llamastack.
         
         Args:
             task: Description of the task to perform
@@ -241,14 +254,20 @@ If you're unsure about an action, explain your reasoning."""
             
         Returns:
             Dictionary with execution results
+            
+        Raises:
+            ConnectionError: If llamastack is not available
         """
-        # Try llamastack first, fallback to local
-        if self.agent_id != "local-agent" and self.llamastack_url.startswith("http"):
-            result = self._run_with_llamastack(task, context)
-        else:
-            result = self._run_locally(task, context)
+        # Check if llamastack_url is valid (handle both string and URL object)
+        url_str = str(self.llamastack_url) if self.llamastack_url else ""
+        if not url_str or not url_str.startswith("http"):
+            raise ConnectionError(
+                "LlamaStack URL is not configured. Please set LLAMA_STACK_URL environment variable."
+            )
         
-        # Remember this execution in memory
+        result = self._run_with_llamastack(task, context)
+        
+        # Store in memory
         if self.memory:
             self.memory.remember_action(
                 action_type="agent_execution",
@@ -261,12 +280,7 @@ If you're unsure about an action, explain your reasoning."""
         return result
     
     def analyze_environment(self) -> Dict[str, Any]:
-        """
-        Analyze the current environment state.
-        
-        Returns:
-            Dictionary with analysis results
-        """
+        """Analyze the current environment state."""
         task = "Analyze the current state of all IT services. Check each service and identify any problems or issues that need attention."
         return self.run(task)
     
@@ -280,28 +294,21 @@ If you're unsure about an action, explain your reasoning."""
         Returns:
             Dictionary with remediation results
         """
-        # Check memory for similar problems
+        context = None
         if self.memory:
             similar_problems = self.memory.get_similar_problems(issue_description, limit=3)
             if similar_problems:
                 context = "Similar problems solved before:\n"
-                for prob in similar_problems:
-                    context += f"- {prob.problem_description}: {'Solved' if prob.success else 'Failed'}\n"
-            else:
-                context = None
-        else:
-            context = None
+                context += "\n".join(
+                    f"- {p.problem_description}: {'Solved' if p.success else 'Failed'}"
+                    for p in similar_problems
+                )
         
         task = f"Remediate the following issue: {issue_description}"
         return self.run(task, context=context)
     
     def get_memory_stats(self) -> Dict[str, Any]:
-        """
-        Get statistics about agent's memory.
-        
-        Returns:
-            Dictionary with memory statistics
-        """
+        """Get statistics about agent's memory."""
         if not self.memory:
             return {"error": "Memory not enabled"}
         
