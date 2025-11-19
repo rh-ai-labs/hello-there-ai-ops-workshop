@@ -77,6 +77,8 @@ python-dotenv>=1.0.0
 tqdm>=4.65.0
 nbstripout>=0.6.0
 termcolor>=2.0.0
+chardet>=5.0.0  # Required by llama-stack for file encoding detection
+einops>=0.7.0  # Required by llama-stack for tensor operations
 
 # DuckDuckGo search (no API key required) - used in Module 5
 duckduckgo-search>=6.0.0
