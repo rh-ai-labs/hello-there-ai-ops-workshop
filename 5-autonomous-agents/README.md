@@ -48,6 +48,17 @@ pip install llama-stack==0.2.12 llama-stack-client==0.2.12
 pip install duckduckgo-search termcolor fire
 ```
 
+## Notebooks Overview
+
+This module contains 6 notebooks that progressively build your understanding of autonomous agents:
+
+1. **01_introduction_to_agents.ipynb** - Introduction to agents, their components, and basic concepts
+2. **02_building_simple_agent.ipynb** - Build a simple agent with tools and memory
+3. **03_llamastack_core_features.ipynb** - Explore LlamaStack's core features: Chat and RAG
+4. **04_mcp_tools.ipynb** - Learn about MCP (Model Context Protocol) and create custom tools
+5. **05_safety_shields.ipynb** - Implement safety shields and content moderation
+6. **06_multi_metric_evaluation.ipynb** - Evaluate agents using multiple metrics including LLM-as-a-Judge
+
 ## Running the Notebooks
 
 1. Start LlamaStack server (if not already running):
@@ -68,7 +79,20 @@ pip install duckduckgo-search termcolor fire
    jupyter notebook
    ```
 
-4. Open `notebooks/02_building_simple_agent.ipynb`
+4. Open notebooks in order:
+   - Start with `notebooks/01_introduction_to_agents.ipynb`
+   - Progress through each notebook sequentially
+   - Each notebook builds on concepts from previous ones
+
+## MCP Server
+
+The module includes a sample MCP server for terminal access (`src/mcp_terminal_server.py`). This server:
+- Provides safe terminal command execution
+- Uses a whitelist approach for security
+- Includes timeout protection and error handling
+- Can be started from the notebook (see `04_mcp_tools.ipynb`)
+
+**Security Note:** The MCP server uses a whitelist of safe commands. In production, you would add more robust security measures.
 
 ## Troubleshooting
 
@@ -97,8 +121,28 @@ If you see `ModuleNotFoundError: No module named 'fire'`:
 pip install fire
 ```
 
+## Additional Resources
+
+### Source Code
+
+The `src/` directory contains:
+- **agent.py** - Core agent implementation with tools and memory
+- **memory.py** - Memory management for agents
+- **environment.py** - Environment simulation for agent testing
+- **mcp_terminal_server.py** - MCP server for terminal command execution
+
+### Key Concepts Covered
+
+- **Agents:** Autonomous systems that can reason, plan, and act
+- **Tools:** Functions that agents can call to interact with the world
+- **Memory:** Short-term and long-term memory for agents
+- **MCP (Model Context Protocol):** Standardized protocol for tool integration
+- **Safety Shields:** Content moderation and safety checks
+- **Multi-metric Evaluation:** Evaluating agents using multiple criteria
+
 ## Notes
 
 - The notebooks include automatic installation checks
 - DuckDuckGo search is used (no API key required)
 - All tools run client-side in your Python process
+- The MCP server can be run directly from the notebook or as a separate process

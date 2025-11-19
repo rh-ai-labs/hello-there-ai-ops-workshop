@@ -142,10 +142,31 @@ Este workshop apresenta uma série de exercícios práticos que demonstram como 
 - Toma ações corretivas automaticamente
 - Aprende com resultados das ações
 
+**Notebooks:**
+1. **01_introduction_to_agents.ipynb** - Introdução aos conceitos de agentes autônomos
+2. **02_building_simple_agent.ipynb** - Construção de um agente simples com ferramentas e memória
+3. **03_llamastack_core_features.ipynb** - Recursos principais do LlamaStack: Chat e RAG
+4. **04_mcp_tools.ipynb** - Protocolo MCP (Model Context Protocol) e criação de ferramentas customizadas
+5. **05_safety_shields.ipynb** - Implementação de escudos de segurança e moderação de conteúdo
+6. **06_multi_metric_evaluation.ipynb** - Avaliação de agentes usando múltiplas métricas incluindo LLM-as-a-Judge
+
+**Conceitos-chave:**
+- **Agentes Autônomos:** Sistemas que podem raciocinar, planejar e agir
+- **Ferramentas (Tools):** Funções que agentes podem chamar para interagir com o mundo
+- **Memória:** Memória de curto e longo prazo para agentes
+- **MCP (Model Context Protocol):** Protocolo padronizado para integração de ferramentas
+- **Safety Shields:** Moderação de conteúdo e verificações de segurança
+- **Avaliação Multi-métrica:** Avaliação de agentes usando múltiplos critérios
+
 **O que você vai aprender:**
 - Conceitos de agentes autônomos
 - Como integrar análise com ação
 - Framework para construção de agentes
 - Técnicas de feedback e aprendizado contínuo
+- Como criar ferramentas customizadas usando MCP
+- Implementação de segurança e moderação de conteúdo
+- Métodos de avaliação de agentes
+
+**Localização:** `5-autonomous-agents/`
 
 ---
