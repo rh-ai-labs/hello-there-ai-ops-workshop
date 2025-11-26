@@ -13,6 +13,23 @@ Este workshop apresenta uma série de exercícios práticos que demonstram como 
 
 ---
 
+## 📖 Guidelines for Contributors
+
+This workshop follows design principles inspired by **Apple Genius Bar tutorials** and **IDEO's human-centered design approach**. 
+
+**For contributors creating new modules or notebooks:**
+- 📘 **[Complete Guidelines](./GUIDELINES.md)** - Comprehensive standards for structure, writing style, and quality
+- 📋 **[Quick Reference](./GUIDELINES_QUICK_REFERENCE.md)** - Cheat sheet for common patterns and checklists
+
+**Key principles:**
+- **Clarity over cleverness** - Explain concepts simply, use analogies
+- **Progressive disclosure** - Build complexity gradually
+- **Delightful discovery** - Make learning feel like exploration
+- **Empathy first** - Anticipate confusion, address it proactively
+- **Consistency is king** - Follow established patterns
+
+---
+
 ## 📚 Módulos do Workshop
 
 ### 1. IA 101 na Prática
