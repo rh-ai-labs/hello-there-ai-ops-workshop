@@ -1,0 +1,156 @@
+#!/bin/bash
+# Deployment script for Llama Stack on OpenShift
+# This script creates the necessary secrets and deploys LlamaStackDistribution
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Configuration - Update these values based on your OpenShift setup
+NAMESPACE="${NAMESPACE:-my-first-model}"
+INFERENCE_MODEL="${INFERENCE_MODEL:-RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic}"
+VLLM_URL="${VLLM_URL:-https://llama-32-3b-instruct-predictor:8443/v1}"
+VLLM_TLS_VERIFY="${VLLM_TLS_VERIFY:-false}"
+VLLM_API_TOKEN="${VLLM_API_TOKEN:-fake}"
+
+# Deployment type: "milvus-inline", "milvus-remote", or "faiss-inline"
+DEPLOYMENT_TYPE="${DEPLOYMENT_TYPE:-milvus-inline}"
+
+echo -e "${BLUE}🚀 Deploying Llama Stack to OpenShift${NC}"
+echo "=========================================="
+echo -e "Namespace: ${GREEN}${NAMESPACE}${NC}"
+echo -e "Deployment Type: ${GREEN}${DEPLOYMENT_TYPE}${NC}"
+echo ""
+
+# Check if oc is installed
+if ! command -v oc &> /dev/null; then
+    echo -e "${RED}❌ OpenShift CLI (oc) is not installed${NC}"
+    echo "Please install it from: https://docs.openshift.com/container-platform/latest/cli_reference/openshift_cli/getting-started-cli.html"
+    exit 1
+fi
+
+# Check if logged in to OpenShift
+if ! oc whoami &> /dev/null; then
+    echo -e "${RED}❌ Not logged in to OpenShift${NC}"
+    echo "Please log in using: oc login --token=<token> --server=<openshift_cluster_url>"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Logged in as: $(oc whoami)${NC}"
+
+# Ensure namespace exists
+echo -e "${BLUE}📦 Checking namespace...${NC}"
+if ! oc get namespace "${NAMESPACE}" &> /dev/null; then
+    echo -e "${YELLOW}⚠️  Namespace ${NAMESPACE} does not exist. Creating...${NC}"
+    oc create namespace "${NAMESPACE}"
+fi
+echo -e "${GREEN}✅ Namespace ${NAMESPACE} exists${NC}"
+
+# Create or update secret
+echo -e "${BLUE}🔐 Creating inference model secret...${NC}"
+oc create secret generic llama-stack-inference-model-secret \
+  --from-literal=INFERENCE_MODEL="${INFERENCE_MODEL}" \
+  --from-literal=VLLM_URL="${VLLM_URL}" \
+  --from-literal=VLLM_TLS_VERIFY="${VLLM_TLS_VERIFY}" \
+  --from-literal=VLLM_API_TOKEN="${VLLM_API_TOKEN}" \
+  --namespace="${NAMESPACE}" \
+  --dry-run=client -o yaml | oc apply -f -
+
+echo -e "${GREEN}✅ Secret created/updated${NC}"
+
+# Deploy LlamaStackDistribution based on type
+echo -e "${BLUE}🚀 Deploying LlamaStackDistribution (${DEPLOYMENT_TYPE})...${NC}"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MANIFESTS_DIR="${SCRIPT_DIR}/../manifests"
+
+case "${DEPLOYMENT_TYPE}" in
+    milvus-inline)
+        CR_FILE="${MANIFESTS_DIR}/llamastackdistribution-inline-milvus.yaml"
+        ;;
+    faiss-inline)
+        CR_FILE="${MANIFESTS_DIR}/llamastackdistribution-inline-faiss.yaml"
+        ;;
+    milvus-remote)
+        CR_FILE="${MANIFESTS_DIR}/llamastackdistribution-remote-milvus.yaml"
+        # Check if Milvus secret exists
+        if ! oc get secret milvus-secret -n "${NAMESPACE}" &> /dev/null; then
+            echo -e "${YELLOW}⚠️  Milvus secret not found. Creating from template...${NC}"
+            echo -e "${YELLOW}⚠️  Please update milvus-secret.yaml with your actual Milvus credentials${NC}"
+            oc apply -f "${MANIFESTS_DIR}/milvus-secret.yaml" || {
+                echo -e "${RED}❌ Failed to create Milvus secret${NC}"
+                echo "Please create it manually with your Milvus credentials"
+                exit 1
+            }
+        fi
+        ;;
+    *)
+        echo -e "${RED}❌ Unknown deployment type: ${DEPLOYMENT_TYPE}${NC}"
+        echo "Valid options: milvus-inline, faiss-inline, milvus-remote"
+        exit 1
+        ;;
+esac
+
+if [ ! -f "${CR_FILE}" ]; then
+    echo -e "${RED}❌ CR file not found: ${CR_FILE}${NC}"
+    exit 1
+fi
+
+# Update namespace in CR file if needed (in case it's different)
+sed "s/namespace: my-first-model/namespace: ${NAMESPACE}/g" "${CR_FILE}" | oc apply -f -
+
+echo -e "${GREEN}✅ LlamaStackDistribution deployed${NC}"
+
+# Wait for pod to be ready
+echo -e "${BLUE}⏳ Waiting for Llama Stack pod to be ready...${NC}"
+oc wait --for=condition=ready pod -l app=llama-stack -n "${NAMESPACE}" --timeout=300s || {
+    echo -e "${YELLOW}⚠️  Pod not ready yet. Check status with:${NC}"
+    echo "  oc get pods -n ${NAMESPACE}"
+    echo "  oc logs -l app=llama-stack -n ${NAMESPACE}"
+}
+
+# Show pod status
+echo ""
+echo -e "${BLUE}📊 Pod Status:${NC}"
+oc get pods -n "${NAMESPACE}" -l app=llama-stack
+
+# Create Route for external access (optional)
+CREATE_ROUTE="${CREATE_ROUTE:-true}"
+if [ "$CREATE_ROUTE" = "true" ]; then
+    echo -e "${BLUE}🌐 Creating Route for external access...${NC}"
+    ROUTE_FILE="${MANIFESTS_DIR}/llamastack-route.yaml"
+    if [ -f "${ROUTE_FILE}" ]; then
+        sed "s/namespace: my-first-model/namespace: ${NAMESPACE}/g" "${ROUTE_FILE}" | oc apply -f -
+        echo -e "${GREEN}✅ Route created${NC}"
+        
+        # Get route URL
+        ROUTE_URL=$(oc get route llamastack-route -n "${NAMESPACE}" -o jsonpath='{.spec.host}' 2>/dev/null || echo "")
+        if [ -n "$ROUTE_URL" ]; then
+            ROUTE_FULL_URL="https://${ROUTE_URL}"
+            echo -e "${GREEN}✅ Route URL: ${CYAN}${ROUTE_FULL_URL}${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  Route file not found, skipping route creation${NC}"
+    fi
+fi
+
+echo ""
+echo -e "${GREEN}✅ Deployment complete!${NC}"
+echo ""
+echo -e "${BLUE}📝 Next steps:${NC}"
+echo "1. Check pod logs: oc logs -l app=llama-stack -n ${NAMESPACE}"
+echo "2. Check service: oc get svc -n ${NAMESPACE}"
+if [ "$CREATE_ROUTE" = "true" ] && [ -n "$ROUTE_URL" ]; then
+    echo "3. Access externally via Route: ${ROUTE_FULL_URL}"
+    echo "4. Or port forward for local access: oc port-forward -n ${NAMESPACE} svc/lsd-llama-milvus-inline-service 8321:8321"
+else
+    echo "3. Create Route for external access: oc apply -f ${MANIFESTS_DIR}/llamastack-route.yaml"
+    echo "4. Or port forward to access locally: oc port-forward -n ${NAMESPACE} svc/lsd-llama-milvus-inline-service 8321:8321"
+fi
+

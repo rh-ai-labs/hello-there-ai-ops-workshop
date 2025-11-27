@@ -1,0 +1,51 @@
+apiVersion: llamastack.io/v1alpha1
+kind: LlamaStackDistribution
+metadata:
+  name: lsd-llama-faiss-inline
+  namespace: my-first-model
+spec:
+  replicas: 1
+  server:
+    containerSpec:
+      resources:
+        requests:
+          cpu: "250m"
+          memory: "500Mi"
+        limits:
+          cpu: "8"
+          memory: "12Gi"
+      env:
+        # vLLM inference model configuration
+        - name: INFERENCE_MODEL
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-inference-model-secret
+              key: INFERENCE_MODEL
+        - name: VLLM_URL
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-inference-model-secret
+              key: VLLM_URL
+        - name: VLLM_TLS_VERIFY
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-inference-model-secret
+              key: VLLM_TLS_VERIFY
+        - name: VLLM_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-inference-model-secret
+              key: VLLM_API_TOKEN
+        # Enable inline FAISS with SQLite backend
+        - name: ENABLE_FAISS
+          value: faiss
+        - name: FAISS_KVSTORE_DB_PATH
+          value: /opt/app-root/src/.llama/distributions/rh/sqlite_vec.db
+        # Recommended workarounds for SQLite accessibility and version check
+        - name: LLAMA_STACK_CONFIG_DIR
+          value: /opt/app-root/src/.llama/distributions/rh
+      name: llama-stack
+      port: 8321
+    distribution:
+      name: rh-dev
+
