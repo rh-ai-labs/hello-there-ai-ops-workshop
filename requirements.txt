@@ -48,6 +48,7 @@ nltk>=3.8.0
 scikit-learn>=1.3.0
 unitxt>=1.0.0
 sacrebleu>=2.0.0
+litellm>=1.0.0  # Required by unitxt CrossProviderInferenceEngine for OpenAI-compatible endpoints
 
 # Llama Stack optional provider dependencies
 # These are required because llama-stack starter distribution initializes all providers
@@ -79,6 +80,7 @@ nbstripout>=0.6.0
 termcolor>=2.0.0
 chardet>=5.0.0  # Required by llama-stack for file encoding detection
 einops>=0.7.0  # Required by llama-stack for tensor operations
+nest_asyncio>=1.5.0  # Required for async code in Jupyter notebooks (fixes event loop issues)
 
 # DuckDuckGo search (no API key required) - used in Module 5
 duckduckgo-search>=6.0.0

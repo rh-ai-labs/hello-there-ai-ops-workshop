@@ -359,36 +359,57 @@ oc logs -l app=llama-stack -n my-first-model
 
 This is the most common issue. The error `VLLMInferenceAdapter.list_provider_model_ids() failed with: Connection error` means Llama Stack cannot reach the vLLM service.
 
+**Quick Fix:**
+
+```bash
+cd openshift/scripts
+
+# Set your vLLM internal URL (without /v1, script will add it)
+export VLLM_BASE_URL="http://llama-32-3b-instruct-predictor.my-first-model.svc.cluster.local"
+export VLLM_API_TOKEN="<your-token>"
+
+# Update the secret
+./update-vllm-url.sh
+```
+
 **Diagnosis:**
 
 ```bash
-# Run diagnostic script
-cd openshift
-./fix-vllm-connection.sh
-
-# Or find vLLM service
-./find-vllm-service.sh
+# Run comprehensive diagnostic script
+cd openshift/scripts
+./troubleshoot-vllm-connection.sh
 ```
 
 **Common fixes:**
 
-1. **Use Fully Qualified Domain Name (FQDN)** if vLLM is in a different namespace:
+1. **Use correct internal URL format** (HTTP, not HTTPS, with /v1 suffix):
    ```bash
-   # Find vLLM service namespace
+   # Find vLLM service
    oc get svc --all-namespaces | grep predictor
    
-   # Update secret with FQDN
+   # Update secret with correct internal URL
+   # For internal cluster communication, use HTTP (not HTTPS)
+   export VLLM_URL="http://llama-32-3b-instruct-predictor.my-first-model.svc.cluster.local/v1"
+   export VLLM_TLS_VERIFY="false"
+   export VLLM_API_TOKEN="<token>"
+   export INFERENCE_MODEL="llama-3-2-3b"  # Or your model name
+   
    oc create secret generic llama-stack-inference-model-secret \
-     --from-literal=VLLM_URL="https://<service-name>.<namespace>.svc.cluster.local:<port>/v1" \
-     --from-literal=VLLM_TLS_VERIFY="false" \
-     --from-literal=VLLM_API_TOKEN="<token>" \
-     --from-literal=INFERENCE_MODEL="RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic" \
+     --from-literal=VLLM_URL="$VLLM_URL" \
+     --from-literal=VLLM_TLS_VERIFY="$VLLM_TLS_VERIFY" \
+     --from-literal=VLLM_API_TOKEN="$VLLM_API_TOKEN" \
+     --from-literal=INFERENCE_MODEL="$INFERENCE_MODEL" \
      --namespace="my-first-model" \
      --dry-run=client -o yaml | oc apply -f -
    
    # Restart pod to pick up new secret
    oc delete pod -l app=llama-stack -n my-first-model
    ```
+   
+   **Important:** 
+   - Use `http://` (not `https://`) for internal cluster communication
+   - URL must end with `/v1`
+   - Use full FQDN: `<service-name>.<namespace>.svc.cluster.local`
 
 2. **Check network policies:**
    ```bash
