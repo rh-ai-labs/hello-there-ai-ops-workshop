@@ -54,13 +54,19 @@ echo -e "${GREEN}✅ Namespace ${NAMESPACE} exists${NC}"
 
 # Create or update secret
 echo -e "${BLUE}🔐 Creating inference model secret...${NC}"
-oc create secret generic llama-stack-inference-model-secret \
-  --from-literal=INFERENCE_MODEL="${INFERENCE_MODEL}" \
-  --from-literal=VLLM_URL="${VLLM_URL}" \
-  --from-literal=VLLM_TLS_VERIFY="${VLLM_TLS_VERIFY}" \
-  --from-literal=VLLM_API_TOKEN="${VLLM_API_TOKEN}" \
-  --namespace="${NAMESPACE}" \
-  --dry-run=client -o yaml | oc apply -f -
+if [ -f "${SECRETS_DIR}/llama-stack-inference-model-secret.yaml" ]; then
+    # Use manifest file if it exists
+    oc apply -f "${SECRETS_DIR}/llama-stack-inference-model-secret.yaml"
+else
+    # Create from command line
+    oc create secret generic llama-stack-inference-model-secret \
+      --from-literal=INFERENCE_MODEL="${INFERENCE_MODEL}" \
+      --from-literal=VLLM_URL="${VLLM_URL}" \
+      --from-literal=VLLM_TLS_VERIFY="${VLLM_TLS_VERIFY}" \
+      --from-literal=VLLM_API_TOKEN="${VLLM_API_TOKEN}" \
+      --namespace="${NAMESPACE}" \
+      --dry-run=client -o yaml | oc apply -f -
+fi
 
 echo -e "${GREEN}✅ Secret created/updated${NC}"
 
@@ -68,7 +74,8 @@ echo -e "${GREEN}✅ Secret created/updated${NC}"
 echo -e "${BLUE}🚀 Deploying LlamaStackDistribution (${DEPLOYMENT_TYPE})...${NC}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MANIFESTS_DIR="${SCRIPT_DIR}/../manifests"
+MANIFESTS_DIR="${SCRIPT_DIR}/../manifests/llamastack"
+SECRETS_DIR="${SCRIPT_DIR}/../manifests/secrets"
 
 case "${DEPLOYMENT_TYPE}" in
     milvus-inline)
@@ -83,7 +90,7 @@ case "${DEPLOYMENT_TYPE}" in
         if ! oc get secret milvus-secret -n "${NAMESPACE}" &> /dev/null; then
             echo -e "${YELLOW}⚠️  Milvus secret not found. Creating from template...${NC}"
             echo -e "${YELLOW}⚠️  Please update milvus-secret.yaml with your actual Milvus credentials${NC}"
-            oc apply -f "${MANIFESTS_DIR}/milvus-secret.yaml" || {
+            oc apply -f "${SECRETS_DIR}/milvus-secret.yaml" || {
                 echo -e "${RED}❌ Failed to create Milvus secret${NC}"
                 echo "Please create it manually with your Milvus credentials"
                 exit 1

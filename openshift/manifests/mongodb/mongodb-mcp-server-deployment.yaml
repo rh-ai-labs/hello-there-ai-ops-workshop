@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-mcp-server
+  namespace: my-first-model
+  labels:
+    app: mongodb-mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb-mcp-server
+  template:
+    metadata:
+      labels:
+        app: mongodb-mcp-server
+    spec:
+      containers:
+      - name: mongodb-mcp-server
+        image: quay.io/mcp-servers/mongodb-mcp-server:latest
+        env:
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: MONGO_CONNECTION_STRING
+        - name: MONGODB_DATABASE
+          value: "mcp_demo"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+        # MCP servers typically communicate via stdio
+        # This deployment assumes the server can be configured via environment variables
+        # Adjust based on the actual MongoDB MCP server implementation
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-mcp-server
+  namespace: my-first-model
+  labels:
+    app: mongodb-mcp-server
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: mongodb-mcp-server
+  # Note: MCP servers typically use stdio, not HTTP
+  # This service is for health checks or if the server supports HTTP
+
