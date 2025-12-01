@@ -127,14 +127,27 @@ fi
 
 echo -e "${GREEN}✅ Deployment complete!${NC}"
 echo ""
+
+# Get MCP server route
+MCP_ROUTE=$(oc get route mongodb-mcp-server -n "${NAMESPACE}" -o jsonpath='{.spec.host}' 2>/dev/null || echo "")
+if [ -n "$MCP_ROUTE" ]; then
+    echo -e "${BLUE}📝 MongoDB MCP Server Route:${NC}"
+    echo "   https://${MCP_ROUTE}"
+    echo "   SSE Endpoint: https://${MCP_ROUTE}/sse"
+    echo ""
+fi
+
 echo -e "${BLUE}📋 Next Steps:${NC}"
-echo "1. Verify MongoDB is accessible:"
+echo "1. Register MongoDB MCP server with LlamaStack:"
+echo "   ./register-mongodb-mcp.sh"
+echo ""
+echo "2. Verify MongoDB is accessible:"
 echo "   oc exec -it deployment/mongodb -n ${NAMESPACE} -- mongosh -u admin -p"
 echo ""
-echo "2. Check MongoDB MCP Server logs:"
+echo "3. Check MongoDB MCP Server logs:"
 echo "   oc logs -n ${NAMESPACE} -l app=mongodb-mcp-server"
 echo ""
-echo "3. Configure LlamaStack to use the MongoDB MCP server"
-echo "   (See notebook 04 for MCP integration examples)"
+echo "4. Use the MongoDB MCP server in your agents:"
+echo "   Add 'mcp::mongodb' to the toolgroups list when creating agents"
 echo ""
 

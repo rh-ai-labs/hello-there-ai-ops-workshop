@@ -56,7 +56,26 @@ oc wait --for=condition=available deployment/mongodb -n my-first-model --timeout
 oc wait --for=condition=available deployment/mongodb-mcp-server -n my-first-model --timeout=300s
 ```
 
-5. **Verify sample data was created:**
+5. **Wait for deployments to be ready:**
+
+```bash
+oc wait --for=condition=available deployment/mongodb -n my-first-model --timeout=300s
+oc wait --for=condition=available deployment/mongodb-mcp-server -n my-first-model --timeout=300s
+```
+
+6. **Register MongoDB MCP Server with LlamaStack:**
+
+```bash
+cd openshift/scripts
+./register-mongodb-mcp.sh
+```
+
+This script will:
+- Discover the LlamaStack route
+- Discover the MongoDB MCP server route
+- Register the MCP server as a toolgroup (`mcp::mongodb`) with LlamaStack
+
+7. **Verify sample data was created:**
 
 ```bash
 # Check MongoDB logs for initialization confirmation
@@ -181,21 +200,69 @@ oc logs -n my-first-model -l app=mongodb-mcp-server --tail=50
 
 ## Connecting to LlamaStack
 
-The MongoDB MCP server needs to be configured in LlamaStack to be available to agents. The configuration depends on how LlamaStack connects to MCP servers.
+The MongoDB MCP server is configured to use **HTTP transport** and must be registered with LlamaStack as a toolgroup.
 
-### Option 1: stdio Connection (Typical for MCP)
+### Automatic Registration (Recommended)
 
-If LlamaStack connects via stdio, you may need to:
-1. Run the MCP server as a sidecar container
-2. Or configure LlamaStack to connect to the MCP server pod
-
-### Option 2: HTTP Connection (If Supported)
-
-If the MongoDB MCP server supports HTTP, you can use the service:
+Use the registration script:
 
 ```bash
-# Get the service URL
-MCP_SERVICE="mongodb-mcp-server.my-first-model.svc.cluster.local:8080"
+cd openshift/scripts
+./register-mongodb-mcp.sh
+```
+
+This script will:
+1. Discover the LlamaStack route
+2. Discover the MongoDB MCP server route
+3. Register the MCP server as toolgroup `mcp::mongodb` with LlamaStack
+4. Verify the registration
+
+### Manual Registration
+
+You can also register manually using curl:
+
+```bash
+# Get routes
+LLAMASTACK_ROUTE=$(oc get route -n my-first-model -l app=llamastack -o jsonpath='{.items[0].spec.host}')
+MCP_ROUTE=$(oc get route mongodb-mcp-server -n my-first-model -o jsonpath='{.spec.host}')
+
+# Register the MCP server
+curl -X POST "https://${LLAMASTACK_ROUTE}/v1/toolgroups" \
+  -H "Content-Type: application/json" \
+  --data "{
+    \"provider_id\": \"model-context-protocol\",
+    \"toolgroup_id\": \"mcp::mongodb\",
+    \"mcp_endpoint\": {
+      \"uri\": \"https://${MCP_ROUTE}/sse\"
+    }
+  }"
+```
+
+### Verify Registration
+
+Check that the toolgroup is registered:
+
+```bash
+LLAMASTACK_ROUTE=$(oc get route -n my-first-model -l app=llamastack -o jsonpath='{.items[0].spec.host}')
+curl -s "https://${LLAMASTACK_ROUTE}/v1/toolgroups" | jq '.[] | select(.identifier == "mcp::mongodb")'
+```
+
+### Using the MongoDB MCP Server in Agents
+
+Once registered, add `mcp::mongodb` to the toolgroups list when creating agents:
+
+```python
+from llama_stack_client import LlamaStackClient
+from llama_stack_client.types.agent_create_params import AgentConfig
+
+client = LlamaStackClient(base_url="https://your-llamastack-route")
+
+agent_config = AgentConfig(
+    model="vllm-inference/llama-32-3b-instruct",
+    instructions="You are a helpful assistant with access to MongoDB.",
+    toolgroups=["mcp::mongodb", "builtin::websearch"],
+    tool_choice="auto"
+)
 ```
 
 ## Usage Examples

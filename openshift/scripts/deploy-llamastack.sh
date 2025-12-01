@@ -14,13 +14,14 @@ NC='\033[0m' # No Color
 
 # Configuration - Update these values based on your OpenShift setup
 NAMESPACE="${NAMESPACE:-my-first-model}"
-INFERENCE_MODEL="${INFERENCE_MODEL:-RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic}"
-VLLM_URL="${VLLM_URL:-https://llama-32-3b-instruct-predictor:8443/v1}"
 VLLM_TLS_VERIFY="${VLLM_TLS_VERIFY:-false}"
 VLLM_API_TOKEN="${VLLM_API_TOKEN:-fake}"
 
 # Deployment type: "milvus-inline", "milvus-remote", or "faiss-inline"
 DEPLOYMENT_TYPE="${DEPLOYMENT_TYPE:-milvus-inline}"
+
+# Auto-detect vLLM URL and model if not provided
+AUTO_DETECT_VLLM="${AUTO_DETECT_VLLM:-true}"
 
 echo -e "${BLUE}🚀 Deploying Llama Stack to OpenShift${NC}"
 echo "=========================================="
@@ -44,7 +45,99 @@ fi
 
 echo -e "${GREEN}✅ Logged in as: $(oc whoami)${NC}"
 
-# Ensure namespace exists
+# Ensure namespace exists first (needed for service discovery)
+echo -e "${BLUE}📦 Checking namespace...${NC}"
+if ! oc get namespace "${NAMESPACE}" &> /dev/null; then
+    echo -e "${YELLOW}⚠️  Namespace ${NAMESPACE} does not exist. Creating...${NC}"
+    oc create namespace "${NAMESPACE}"
+fi
+echo -e "${GREEN}✅ Namespace ${NAMESPACE} exists${NC}"
+echo ""
+
+# Auto-detect vLLM URL and model (unless explicitly disabled or both are provided)
+if [ "$AUTO_DETECT_VLLM" != "false" ] && ([ -z "$INFERENCE_MODEL" ] || [ -z "$VLLM_URL" ]); then
+    echo -e "${BLUE}🔍 Auto-detecting vLLM configuration...${NC}"
+    
+    # Find vLLM service (look for predictor services)
+    VLLM_SERVICE=$(oc get svc -n "${NAMESPACE}" -o jsonpath='{.items[?(@.metadata.name=~".*predictor.*")].metadata.name}' 2>/dev/null | head -1 || echo "")
+    
+    if [ -z "$VLLM_SERVICE" ]; then
+        # Try alternative: look for services with "llama" or "vllm" in name
+        VLLM_SERVICE=$(oc get svc -n "${NAMESPACE}" -o jsonpath='{.items[?(@.metadata.name=~".*llama.*|.*vllm.*")].metadata.name}' 2>/dev/null | head -1 || echo "")
+    fi
+    
+    if [ -n "$VLLM_SERVICE" ]; then
+        echo -e "${GREEN}   ✅ Found vLLM service: ${VLLM_SERVICE}${NC}"
+        
+        # Get service port (look for port 8080 or 80)
+        VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "${NAMESPACE}" -o jsonpath='{.spec.ports[?(@.targetPort==8080 || @.port==8080)].targetPort}' 2>/dev/null || echo "")
+        if [ -z "$VLLM_PORT" ] || [ "$VLLM_PORT" = "null" ]; then
+            VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "${NAMESPACE}" -o jsonpath='{.spec.ports[0].targetPort}' 2>/dev/null || echo "8080")
+        fi
+        
+        # Build vLLM URL (use internal service URL)
+        VLLM_URL="http://${VLLM_SERVICE}.${NAMESPACE}.svc.cluster.local:${VLLM_PORT}/v1"
+        echo -e "${GREEN}   ✅ vLLM URL: ${VLLM_URL}${NC}"
+        
+        # Query vLLM to get available models
+        echo -e "${BLUE}   🔍 Querying vLLM for available models...${NC}"
+        
+        # Try to query from a pod in the cluster (more reliable)
+        QUERY_POD=$(oc get pods -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null | head -1 || echo "")
+        
+        if [ -n "$QUERY_POD" ]; then
+            # Check if curl is available in the pod
+            if oc exec -n "${NAMESPACE}" "$QUERY_POD" -- which curl > /dev/null 2>&1; then
+                MODELS_JSON=$(oc exec -n "${NAMESPACE}" "$QUERY_POD" -- \
+                    curl -s "${VLLM_URL}/models" 2>/dev/null || echo "")
+            else
+                # Try using a temporary debug pod
+                MODELS_JSON=$(oc run -n "${NAMESPACE}" --rm -i --restart=Never --image=curlimages/curl:latest -- curl -s "${VLLM_URL}/models" 2>/dev/null || echo "")
+            fi
+        else
+            # Fallback: try from local machine (might not work if service is internal-only)
+            MODELS_JSON=$(curl -s -k "${VLLM_URL}/models" 2>/dev/null || echo "")
+        fi
+        
+        if [ -n "$MODELS_JSON" ] && echo "$MODELS_JSON" | grep -q "data"; then
+            # Extract first model ID
+            INFERENCE_MODEL=$(echo "$MODELS_JSON" | jq -r '.data[0].id' 2>/dev/null || echo "")
+            
+            if [ -n "$INFERENCE_MODEL" ] && [ "$INFERENCE_MODEL" != "null" ]; then
+                echo -e "${GREEN}   ✅ Found vLLM model: ${INFERENCE_MODEL}${NC}"
+            else
+                echo -e "${YELLOW}   ⚠️  Could not parse model ID from response${NC}"
+                INFERENCE_MODEL="llama-32-3b-instruct"
+                echo -e "${YELLOW}   Using default: ${INFERENCE_MODEL}${NC}"
+            fi
+        else
+            echo -e "${YELLOW}   ⚠️  Could not query vLLM models endpoint${NC}"
+            echo -e "${YELLOW}   Using default model identifier${NC}"
+            INFERENCE_MODEL="llama-32-3b-instruct"
+        fi
+    else
+        echo -e "${YELLOW}   ⚠️  Could not find vLLM service${NC}"
+        echo -e "${YELLOW}   Using defaults (you may need to set VLLM_URL and INFERENCE_MODEL manually)${NC}"
+        VLLM_URL="http://llama-32-3b-instruct-predictor.${NAMESPACE}.svc.cluster.local:8080/v1"
+        INFERENCE_MODEL="llama-32-3b-instruct"
+    fi
+    echo ""
+else
+    # Use provided values or defaults (only if auto-detect is disabled)
+    if [ -z "$VLLM_URL" ]; then
+        VLLM_URL="http://llama-32-3b-instruct-predictor.${NAMESPACE}.svc.cluster.local:8080/v1"
+    fi
+    if [ -z "$INFERENCE_MODEL" ]; then
+        INFERENCE_MODEL="llama-32-3b-instruct"
+    fi
+fi
+
+# Display final configuration
+echo -e "${BLUE}📋 Final Configuration:${NC}"
+echo -e "   Model: ${CYAN}${INFERENCE_MODEL}${NC}"
+echo -e "   vLLM URL: ${CYAN}${VLLM_URL}${NC}"
+echo ""
+
 echo -e "${BLUE}📦 Checking namespace...${NC}"
 if ! oc get namespace "${NAMESPACE}" &> /dev/null; then
     echo -e "${YELLOW}⚠️  Namespace ${NAMESPACE} does not exist. Creating...${NC}"
