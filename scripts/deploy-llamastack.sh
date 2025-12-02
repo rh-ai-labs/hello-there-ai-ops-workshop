@@ -167,8 +167,8 @@ echo -e "${GREEN}✅ Secret created/updated${NC}"
 echo -e "${BLUE}🚀 Deploying LlamaStackDistribution (${DEPLOYMENT_TYPE})...${NC}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MANIFESTS_DIR="${SCRIPT_DIR}/../manifests/llamastack"
-SECRETS_DIR="${SCRIPT_DIR}/../manifests/secrets"
+MANIFESTS_DIR="${SCRIPT_DIR}/../openshift/manifests/llamastack"
+SECRETS_DIR="${SCRIPT_DIR}/../openshift/manifests/secrets"
 
 case "${DEPLOYMENT_TYPE}" in
     milvus-inline)

@@ -17,8 +17,8 @@ LlamaStackDistribution is a Custom Resource that manages the complete LlamaStack
 ### Option 1: Using Deployment Script (Recommended)
 
 ```bash
-cd openshift/scripts
-./deploy-llamastack.sh
+# From project root
+./scripts/deploy-llamastack.sh
 ```
 
 The script automatically:

@@ -48,10 +48,11 @@ Este workshop apresenta uma série de exercícios práticos que demonstram como 
    ./scripts/setup-env.sh
    ```
 
-4. **LlamaStack no OpenShift** (para módulos 3 e 5)
+4. **LlamaStack no OpenShift** (para módulos 2 e 4)
    - LlamaStack deployado no OpenShift
    - Route configurada para acesso externo
-   - Veja [OpenShift Deployment Guide](./openshift/README.md) para detalhes
+   - Veja [Environment Setup Guide](./scripts/README.md) para detalhes de configuração
+   - Veja [OpenShift Deployment Guide](./openshift/README.md) para guias avançados
 
 ### Configuração Inicial
 

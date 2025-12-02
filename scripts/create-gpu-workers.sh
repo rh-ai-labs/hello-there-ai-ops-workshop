@@ -73,7 +73,7 @@ echo ""
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MANIFEST_FILE="${SCRIPT_DIR}/../manifests/infrastructure/gpu-worker-machineset.yaml"
+MANIFEST_FILE="${SCRIPT_DIR}/../openshift/manifests/infrastructure/gpu-worker-machineset.yaml"
 
 # Check if manifest exists
 if [ ! -f "$MANIFEST_FILE" ]; then

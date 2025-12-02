@@ -41,8 +41,8 @@ Before starting, make sure you have everything you need:
 ### Quick Deploy (Recommended)
 
 ```bash
-cd openshift/scripts
-./deploy-llamastack.sh
+# From project root
+./scripts/deploy-llamastack.sh
 ```
 
 This script will:
@@ -67,8 +67,8 @@ The script detects your vLLM configuration and creates:
 ### Quick Deploy
 
 ```bash
-cd openshift/scripts
-./deploy-mongodb-mcp.sh
+# From project root
+./scripts/deploy-mongodb-mcp.sh
 ```
 
 This script will:
@@ -86,8 +86,8 @@ This script will:
 Connect MongoDB MCP server to LlamaStack:
 
 ```bash
-cd openshift/scripts
-./register-mongodb-mcp.sh
+# From project root
+./scripts/register-mongodb-mcp.sh
 ```
 
 This registers the MongoDB MCP server as a toolgroup that agents can use.

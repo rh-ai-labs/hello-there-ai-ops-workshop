@@ -38,6 +38,7 @@ Welcome! This guide helps you deploy LlamaStack and related services on OpenShif
 
 ### Deploy Everything
 ```bash
+# From project root
 # 1. Deploy LlamaStack
 ./scripts/deploy-llamastack.sh
 

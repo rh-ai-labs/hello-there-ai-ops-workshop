@@ -57,8 +57,8 @@ Register the MCP server as a toolgroup in LlamaStack.
 ### Using Script (Recommended)
 
 ```bash
-cd openshift/scripts
-./register-mongodb-mcp.sh
+# From project root
+./scripts/register-mongodb-mcp.sh
 ```
 
 ### Manual Registration
