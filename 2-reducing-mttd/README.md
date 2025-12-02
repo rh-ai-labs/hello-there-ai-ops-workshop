@@ -190,12 +190,10 @@ Uses a Large Language Model (like Llama) to evaluate text quality based on struc
 2-reducing-mttd/
 ├── data/                    # Datasets (CSV files)
 ├── notebooks/               # Jupyter notebooks (01-06)
-├── src/                    # Source code modules
-│   ├── utils.py           # Utility functions
-│   ├── evaluator.py       # Evaluation framework
-│   └── prompts.py         # Prompt templates
 └── README.md              # This file
 ```
+
+**Note:** Utility functions are defined directly in the notebooks where they're used, following the workshop's self-contained notebook approach.
 
 ---
 
