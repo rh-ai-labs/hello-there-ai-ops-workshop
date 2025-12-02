@@ -153,7 +153,7 @@ Execute the notebook in order:
 ## 📊 Project Structure
 
 ```
-1-play-tennis/
+1-ai-fundamentals/
 ├── README.md              # This file
 ├── notebooks/            # Jupyter notebooks
 │   └── 01_introduction_to_decision_trees.ipynb
@@ -228,8 +228,8 @@ The same decision tree approach can be used for:
 
 After completing this module, you'll be ready for:
 
-- **Module 2:** `2-reducing-mttd/` - Learn how to evaluate and improve AI outputs using multiple evaluation methods
-- **Module 5:** `5-autonomous-agents/` - Build autonomous agents that can take actions based on AI analysis
+- **Module 2:** `2-ai-rag/` - Learn how to use RAG and semantic search to find similar incidents
+- **Module 3:** `3-ai-evaluation/` - Learn how to evaluate and improve AI outputs using multiple evaluation methods
 
 **Related Resources:**
 - [Scikit-learn Decision Trees Documentation](https://scikit-learn.org/stable/modules/tree.html)

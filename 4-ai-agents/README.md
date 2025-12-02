@@ -1,4 +1,4 @@
-# Module 5: Autonomous Agents
+# Module 4: Autonomous Agents
 
 This module demonstrates how to build autonomous agents using LlamaStack.
 

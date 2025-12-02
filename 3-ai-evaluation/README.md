@@ -1,4 +1,4 @@
-# Reducing MTTD: AI-Powered Close Notes Evaluation and Generation
+# Module 3: AI Evaluation - Close Notes Quality Assessment
 
 **Project:** AI Test Drive – Cenário 2: Enriquecendo Incidentes com IA  
 **Goal:** Evaluate and generate high-quality close notes for IT incidents using AI
@@ -187,15 +187,13 @@ Uses a Large Language Model (like Llama) to evaluate text quality based on struc
 ## 📊 Project Structure
 
 ```
-2-reducing-mttd/
+3-ai-evaluation/
 ├── data/                    # Datasets (CSV files)
 ├── notebooks/               # Jupyter notebooks (01-06)
-├── src/                    # Source code modules
-│   ├── utils.py           # Utility functions
-│   ├── evaluator.py       # Evaluation framework
-│   └── prompts.py         # Prompt templates
 └── README.md              # This file
 ```
+
+**Note:** Utility functions are defined directly in the notebooks where they're used, following the workshop's self-contained notebook approach.
 
 ---
 
