@@ -1,0 +1,4 @@
+# This file ensures the data directory is tracked by git
+# even when it only contains data files that might be gitignored
+
+

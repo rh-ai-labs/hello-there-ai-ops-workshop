@@ -61,8 +61,21 @@ mlruns/
 mlartifacts/
 
 # Data files (generated from notebooks)
-# All data directory contents are ignored (CSV, embeddings, etc.)
-data/
+# Ignore data directories at root level and large generated data files
+/data/
+**/data/*.csv
+**/data/*.json
+**/data/*.parquet
+**/data/*.pkl
+**/data/*.h5
+**/data/*.db
+**/data/*.db-shm
+**/data/*.db-wal
+
+# But allow small sample datasets that are part of the workshop
+!**/data/.gitkeep
+# Module 1: Small example dataset
+!**/1-ai-fundamentals/data/play_tennis.csv
 
 # Temporary files
 *.tmp
