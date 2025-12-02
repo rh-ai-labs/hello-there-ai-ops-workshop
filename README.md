@@ -97,11 +97,23 @@ This workshop follows design principles inspired by **Apple Genius Bar tutorials
 - ✅ RAG mais preciso e eficiente
 - ✅ Resultados relevantes e acionáveis
 
+**Notebooks:**
+1. **01_simple_rag_llama_stack_chromadb.ipynb** - Construção de um sistema RAG básico
+2. **02_multifield_rag_llama_stack_chromadb.ipynb** - RAG aprimorado com indexação multi-campo
+
+**Conceitos-chave:**
+- **RAG (Retrieval-Augmented Generation):** Combina recuperação de informações com geração de texto
+- **Busca Semântica:** Busca baseada em significado, não apenas palavras-chave
+- **Vector Databases:** Bancos de dados que armazenam documentos como vetores para busca rápida
+- **Multi-Field RAG:** Combina múltiplos campos de documentos para melhor recuperação
+
 **O que você vai aprender:**
 - Conceito de busca por semântica
 - Como embeddings melhoram a precisão do RAG
 - Técnicas para tornar o RAG mais eficiente
 - Como aplicar isso na prática para reduzir MTTR
+
+**Localização:** `3-rag/`
 
 ---
 
@@ -115,12 +127,18 @@ This workshop follows design principles inspired by **Apple Genius Bar tutorials
 - **Tags de risco:** "baixo", "médio", "alto"
 - **Justificativas:** Explicação do nível de risco atribuído
 
+**Notebooks:**
+1. **01_fine_tune_dataset.ipynb** - Preparação do dataset para fine-tuning
+2. **02_upload_fine_tune_model.ipynb** - Fine-tuning do modelo usando LoRA
+3. **03_test_fine_tuned_model.ipynb** - Teste do modelo fine-tuned
+
 **Conceitos introduzidos:**
+- **Fine-tuning:** Adaptação de um modelo pré-treinado para uma tarefa específica
+- **LoRA (Low-Rank Adaptation):** Técnica eficiente de fine-tuning que treina apenas uma pequena fração dos parâmetros
+- **Supervised Fine-Tuning (SFT):** Treinamento supervisionado com exemplos rotulados
+- **Structured Output Extraction:** Extração de campos estruturados de texto não estruturado
 - **Tagging automático:** LLM analisa mudança e atribui nível de risco
 - **LLM-as-a-Judge:** Segundo modelo avalia se a classificação faz sentido
-- **Fine-tuning supervisionado:** Modelo pequeno (3B-7B) ajustado com dataset de mudanças e incidentes
-- **CPT + SFT:** Continual Pre-Training + Supervised Fine-Tuning (processo da Meta)
-- **RHLF / RLAIF:** Reinforcement Learning from Human/AI Feedback
 
 **Cenários:**
 
@@ -144,6 +162,8 @@ This workshop follows design principles inspired by **Apple Genius Bar tutorials
 - Técnicas de fine-tuning para modelos de linguagem
 - Processo de LLM-as-a-Judge para validação
 - Simulação de processos de IA assistida para RCA (Root Cause Analysis)
+
+**Localização:** `4-predictive-analysis/`
 
 ---
 
