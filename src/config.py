@@ -53,6 +53,8 @@ LLAMA_STACK_URL = os.getenv("LLAMA_STACK_URL", "").rstrip("/")
 MODEL = os.getenv("LLAMA_MODEL", "vllm-inference/llama-32-3b-instruct")
 NAMESPACE = os.getenv("NAMESPACE", "my-first-model")
 MCP_MONGODB_URL = os.getenv("MCP_MONGODB_URL", "").rstrip("/")
+VLLM_API_BASE = os.getenv("VLLM_API_BASE", "").rstrip("/")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic")
 INSIDE_CLUSTER = is_inside_openshift()
 
 # Auto-detect URLs if not explicitly set
@@ -102,10 +104,54 @@ if not MCP_MONGODB_URL:
         except Exception:
             MCP_MONGODB_URL = ""
 
+# Auto-detect vLLM URL if not explicitly set
+if not VLLM_API_BASE:
+    if INSIDE_CLUSTER:
+        # Inside cluster: try to find vLLM predictor service
+        try:
+            import subprocess
+            # Look for predictor services (vLLM inference models)
+            result = subprocess.run(
+                ["oc", "get", "svc", "-n", NAMESPACE,
+                 "-o", "jsonpath={.items[?(@.metadata.name=~'.*predictor.*')].metadata.name}"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0 and result.stdout:
+                vllm_service = result.stdout.strip().split()[0] if result.stdout.strip() else None
+                if vllm_service:
+                    VLLM_API_BASE = f"http://{vllm_service}.{NAMESPACE}.svc.cluster.local:8080/v1"
+        except Exception:
+            pass
+    else:
+        # Outside cluster: try to find vLLM route
+        try:
+            import subprocess
+            # Try common route patterns for vLLM/inference models
+            route_patterns = ["*-predictor-route", "*-inference-route", "*-vllm-route"]
+            for pattern in route_patterns:
+                result = subprocess.run(
+                    ["oc", "get", "route", "-n", NAMESPACE,
+                     "-o", "jsonpath={.items[?(@.metadata.name=~'"+pattern+"')].spec.host}"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                if result.returncode == 0 and result.stdout:
+                    host = result.stdout.strip().split()[0] if result.stdout.strip() else None
+                    if host:
+                        VLLM_API_BASE = f"https://{host}/v1"
+                        break
+        except Exception:
+            pass
+
 # Export configuration dict for easy access
 CONFIG = {
     "llamastack_url": LLAMA_STACK_URL,
     "mcp_mongodb_url": MCP_MONGODB_URL,
+    "vllm_api_base": VLLM_API_BASE,
+    "openai_model": OPENAI_MODEL,
     "model": MODEL,
     "namespace": NAMESPACE,
     "inside_cluster": INSIDE_CLUSTER,

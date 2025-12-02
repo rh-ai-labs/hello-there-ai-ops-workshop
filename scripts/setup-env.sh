@@ -115,6 +115,34 @@ fi
 
 # Get model (from env or default)
 MODEL="${LLAMA_MODEL:-vllm-inference/llama-32-3b-instruct}"
+OPENAI_MODEL="${OPENAI_MODEL:-RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic}"
+
+# Detect vLLM API Base URL
+VLLM_API_BASE=""
+if [ -n "$VLLM_API_BASE" ]; then
+    echo -e "${GREEN}✅ Using VLLM_API_BASE from environment${NC}"
+elif [ "$INSIDE_CLUSTER" = true ]; then
+    # Inside cluster: try to find vLLM predictor service
+    VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" -o jsonpath='{.items[?(@.metadata.name=~".*predictor.*")].metadata.name}' 2>/dev/null | head -1 || echo "")
+    if [ -n "$VLLM_SERVICE" ]; then
+        VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[?(@.targetPort==8080 || @.port==8080)].targetPort}' 2>/dev/null || echo "8080")
+        VLLM_API_BASE="http://${VLLM_SERVICE}.${NAMESPACE}.svc.cluster.local:${VLLM_PORT}/v1"
+        echo -e "${GREEN}✅ Detected vLLM service URL${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Could not detect vLLM service (optional)${NC}"
+        VLLM_API_BASE=""
+    fi
+else
+    # Outside cluster: try to find vLLM route
+    VLLM_ROUTE=$(oc get route -n "$NAMESPACE" -o jsonpath='{.items[?(@.metadata.name=~".*predictor.*|.*inference.*|.*vllm.*")].spec.host}' 2>/dev/null | head -1 || echo "")
+    if [ -n "$VLLM_ROUTE" ]; then
+        VLLM_API_BASE="https://${VLLM_ROUTE}/v1"
+        echo -e "${GREEN}✅ Detected vLLM route URL${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Could not detect vLLM route (optional)${NC}"
+        VLLM_API_BASE=""
+    fi
+fi
 
 # Generate .env file
 echo ""
@@ -146,6 +174,16 @@ NAMESPACE=$NAMESPACE
 # If auto-detection fails, set manually:
 # MCP_MONGODB_URL=https://mongodb-mcp-server-route-my-first-model.apps.ocp.example.com
 MCP_MONGODB_URL=$MCP_MONGODB_URL
+
+# vLLM API Base URL (optional, only needed for Module 2 Notebook 05)
+# Inside cluster: Service URL (auto-detected)
+# Outside cluster: Route URL (auto-detected via oc command)
+# If auto-detection fails, set manually:
+# VLLM_API_BASE=https://model-predictor-route-my-first-model.apps.ocp.example.com/v1
+VLLM_API_BASE=$VLLM_API_BASE
+
+# OpenAI-compatible model name (for vLLM, used in Module 2 Notebook 05)
+OPENAI_MODEL=$OPENAI_MODEL
 EOF
 
 echo -e "${GREEN}✅ .env file created: $ENV_FILE${NC}"
@@ -153,7 +191,9 @@ echo ""
 echo "📋 Configuration:"
 echo "   LlamaStack URL: ${LLAMA_STACK_URL:-<not set - please configure>}"
 echo "   MongoDB MCP URL: ${MCP_MONGODB_URL:-<not set - optional>}"
+echo "   vLLM API Base: ${VLLM_API_BASE:-<not set - optional>}"
 echo "   Model: $MODEL"
+echo "   OpenAI Model: $OPENAI_MODEL"
 echo "   Namespace: $NAMESPACE"
 echo ""
 
