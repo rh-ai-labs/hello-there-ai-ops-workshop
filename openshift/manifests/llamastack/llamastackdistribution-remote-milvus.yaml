@@ -1,0 +1,60 @@
+apiVersion: llamastack.io/v1alpha1
+kind: LlamaStackDistribution
+metadata:
+  name: lsd-llama-milvus-remote
+  namespace: my-first-model
+spec:
+  replicas: 1
+  server:
+    containerSpec:
+      resources:
+        requests:
+          cpu: "250m"
+          memory: "500Mi"
+        limits:
+          cpu: 4
+          memory: "12Gi"
+      env:
+        - name: INFERENCE_MODEL
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-inference-model-secret
+              key: INFERENCE_MODEL
+        - name: VLLM_MAX_TOKENS
+          value: "4096"
+        - name: VLLM_URL
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-inference-model-secret
+              key: VLLM_URL
+        - name: VLLM_TLS_VERIFY
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-inference-model-secret
+              key: VLLM_TLS_VERIFY
+        - name: VLLM_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-inference-model-secret
+              key: VLLM_API_TOKEN
+        # --- Remote Milvus configuration from secret ---
+        - name: MILVUS_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: milvus-secret
+              key: MILVUS_ENDPOINT
+        - name: MILVUS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: milvus-secret
+              key: MILVUS_TOKEN
+        - name: MILVUS_CONSISTENCY_LEVEL
+          valueFrom:
+            secretKeyRef:
+              name: milvus-secret
+              key: MILVUS_CONSISTENCY_LEVEL
+      name: llama-stack
+      port: 8321
+    distribution:
+      name: rh-dev
+

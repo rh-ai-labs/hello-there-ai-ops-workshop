@@ -1,0 +1,181 @@
+---
+# MachineSet for GPU worker nodes (g6.4xlarge)
+# This creates 2 GPU nodes across 2 availability zones for high availability
+# Each node has: 1x NVIDIA T4 GPU, 16 vCPUs, 64 GiB RAM
+
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  name: ocp-xf56d-worker-gpu-us-east-2a
+  namespace: openshift-machine-api
+  labels:
+    machine.openshift.io/cluster-api-cluster: ocp-xf56d
+  annotations:
+    machine.openshift.io/GPU: "1"
+    machine.openshift.io/memoryMb: "65536"
+    machine.openshift.io/vCPU: "16"
+    capacity.cluster-autoscaler.kubernetes.io/labels: "node-role.kubernetes.io/gpu=true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: ocp-xf56d
+      machine.openshift.io/cluster-api-machineset: ocp-xf56d-worker-gpu-us-east-2a
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: ocp-xf56d
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: ocp-xf56d-worker-gpu-us-east-2a
+        node-role.kubernetes.io/gpu: "true"
+    spec:
+      lifecycleHooks: {}
+      metadata: {}
+      providerSpec:
+        value:
+          ami:
+            id: ami-082a55a580d5538ed  # Update with your cluster's AMI ID
+          apiVersion: machine.openshift.io/v1beta1
+          blockDevices:
+          - ebs:
+              encrypted: true
+              iops: 0
+              kmsKey:
+                arn: ""
+              volumeSize: 1500
+              volumeType: gp3
+          capacityReservationId: ""
+          credentialsSecret:
+            name: aws-cloud-credentials
+          deviceIndex: 0
+          iamInstanceProfile:
+            id: ocp-xf56d-worker-profile
+          instanceType: g6.4xlarge  # NVIDIA T4 GPU instance
+          kind: AWSMachineProviderConfig
+          metadata:
+            creationTimestamp: null
+          metadataServiceOptions: {}
+          placement:
+            availabilityZone: us-east-2a
+            region: us-east-2
+          securityGroups:
+          - filters:
+            - name: tag:Name
+              values:
+              - ocp-xf56d-node
+          - filters:
+            - name: tag:Name
+              values:
+              - ocp-xf56d-lb
+          subnet:
+            filters:
+            - name: tag:Name
+              values:
+              - ocp-xf56d-subnet-private-us-east-2a
+          tags:
+          - name: kubernetes.io/cluster/ocp-xf56d
+            value: owned
+          - name: Stack
+            value: project openshift-cluster-czp7f
+          - name: config
+            value: openshift-cluster
+          - name: guid
+            value: czp7f
+          - name: owner
+            value: unknown
+          - name: uuid
+            value: e8c079c9-2fb9-5163-a0d1-ba2f03d79b6c
+          - name: node-role.kubernetes.io/gpu
+            value: "true"
+          userDataSecret:
+            name: worker-user-data
+---
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  name: ocp-xf56d-worker-gpu-us-east-2b
+  namespace: openshift-machine-api
+  labels:
+    machine.openshift.io/cluster-api-cluster: ocp-xf56d
+  annotations:
+    machine.openshift.io/GPU: "1"
+    machine.openshift.io/memoryMb: "65536"
+    machine.openshift.io/vCPU: "16"
+    capacity.cluster-autoscaler.kubernetes.io/labels: "node-role.kubernetes.io/gpu=true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: ocp-xf56d
+      machine.openshift.io/cluster-api-machineset: ocp-xf56d-worker-gpu-us-east-2b
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: ocp-xf56d
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: ocp-xf56d-worker-gpu-us-east-2b
+        node-role.kubernetes.io/gpu: "true"
+    spec:
+      lifecycleHooks: {}
+      metadata: {}
+      providerSpec:
+        value:
+          ami:
+            id: ami-082a55a580d5538ed  # Update with your cluster's AMI ID
+          apiVersion: machine.openshift.io/v1beta1
+          blockDevices:
+          - ebs:
+              encrypted: true
+              iops: 0
+              kmsKey:
+                arn: ""
+              volumeSize: 1500
+              volumeType: gp3
+          capacityReservationId: ""
+          credentialsSecret:
+            name: aws-cloud-credentials
+          deviceIndex: 0
+          iamInstanceProfile:
+            id: ocp-xf56d-worker-profile
+          instanceType: g6.4xlarge  # NVIDIA T4 GPU instance
+          kind: AWSMachineProviderConfig
+          metadata:
+            creationTimestamp: null
+          metadataServiceOptions: {}
+          placement:
+            availabilityZone: us-east-2b
+            region: us-east-2
+          securityGroups:
+          - filters:
+            - name: tag:Name
+              values:
+              - ocp-xf56d-node
+          - filters:
+            - name: tag:Name
+              values:
+              - ocp-xf56d-lb
+          subnet:
+            filters:
+            - name: tag:Name
+              values:
+              - ocp-xf56d-subnet-private-us-east-2b
+          tags:
+          - name: kubernetes.io/cluster/ocp-xf56d
+            value: owned
+          - name: Stack
+            value: project openshift-cluster-czp7f
+          - name: config
+            value: openshift-cluster
+          - name: guid
+            value: czp7f
+          - name: owner
+            value: unknown
+          - name: uuid
+            value: e8c079c9-2fb9-5163-a0d1-ba2f03d79b6c
+          - name: node-role.kubernetes.io/gpu
+            value: "true"
+          userDataSecret:
+            name: worker-user-data
+

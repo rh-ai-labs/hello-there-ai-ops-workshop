@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-mcp-server
+  namespace: my-first-model
+  labels:
+    app: mongodb-mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb-mcp-server
+  template:
+    metadata:
+      labels:
+        app: mongodb-mcp-server
+    spec:
+      containers:
+      - name: mongodb-mcp-server
+        image: mongodb/mongodb-mcp-server:latest
+        env:
+        - name: MDB_MCP_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: MONGO_CONNECTION_STRING
+        - name: MDB_MCP_READ_ONLY
+          value: "true"
+        - name: MDB_MCP_TRANSPORT
+          value: "http"
+        - name: MDB_MCP_HTTP_HOST
+          value: "0.0.0.0"
+        - name: MDB_MCP_HTTP_PORT
+          value: "3000"
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-mcp-server
+  namespace: my-first-model
+  labels:
+    app: mongodb-mcp-server
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: mongodb-mcp-server
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mongodb-mcp-server
+  namespace: my-first-model
+  labels:
+    app: mongodb-mcp-server
+spec:
+  to:
+    kind: Service
+    name: mongodb-mcp-server
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+
