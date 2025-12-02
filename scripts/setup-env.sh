@@ -73,8 +73,8 @@ get_service_url() {
 }
 
 # Detect LlamaStack URL
-LLAMA_STACK_URL=""
-if [ -n "$LLAMA_STACK_URL" ]; then
+# Check if already set in environment first
+if [ -n "${LLAMA_STACK_URL:-}" ]; then
     echo -e "${GREEN}✅ Using LLAMA_STACK_URL from environment${NC}"
 elif [ "$INSIDE_CLUSTER" = true ]; then
     # Inside cluster: use service URL
@@ -90,59 +90,150 @@ else
         echo -e "${YELLOW}⚠️  Please set LLAMA_STACK_URL manually${NC}"
         echo "   💡 Get route URL: oc get route llamastack-route -n $NAMESPACE -o jsonpath='{.spec.host}'"
         echo "   💡 Then set: export LLAMA_STACK_URL='https://<route-host>'"
-        LLAMA_STACK_URL=""
+        LLAMA_STACK_URL="${LLAMA_STACK_URL:-}"
     fi
 fi
 
+# Ensure LLAMA_STACK_URL is set (use empty string if not detected)
+LLAMA_STACK_URL="${LLAMA_STACK_URL:-}"
+
 # Detect MongoDB MCP URL
-MCP_MONGODB_URL=""
-if [ -n "$MCP_MONGODB_URL" ]; then
+# Check if already set in environment first
+if [ -n "${MCP_MONGODB_URL:-}" ]; then
     echo -e "${GREEN}✅ Using MCP_MONGODB_URL from environment${NC}"
 elif [ "$INSIDE_CLUSTER" = true ]; then
     # Inside cluster: use service URL
     MCP_MONGODB_URL=$(get_service_url "mongodb-mcp-server" "$NAMESPACE" "3000")
     echo -e "${GREEN}✅ Detected MongoDB MCP service URL${NC}"
 else
-    # Outside cluster: try to get route
-    if route_url=$(get_route_url "mongodb-mcp-server-route" "$NAMESPACE"); then
+    # Outside cluster: try to get route (try both possible route names)
+    if route_url=$(get_route_url "mongodb-mcp-server" "$NAMESPACE"); then
+        MCP_MONGODB_URL="$route_url"
+        echo -e "${GREEN}✅ Detected MongoDB MCP route URL${NC}"
+    elif route_url=$(get_route_url "mongodb-mcp-server-route" "$NAMESPACE"); then
         MCP_MONGODB_URL="$route_url"
         echo -e "${GREEN}✅ Detected MongoDB MCP route URL${NC}"
     else
         echo -e "${YELLOW}⚠️  Could not detect MongoDB MCP route (optional)${NC}"
-        MCP_MONGODB_URL=""
+        MCP_MONGODB_URL="${MCP_MONGODB_URL:-}"
     fi
 fi
+
+# Ensure MCP_MONGODB_URL is set (use empty string if not detected)
+MCP_MONGODB_URL="${MCP_MONGODB_URL:-}"
 
 # Get model (from env or default)
 MODEL="${LLAMA_MODEL:-vllm-inference/llama-32-3b-instruct}"
 OPENAI_MODEL="${OPENAI_MODEL:-RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic}"
 
 # Detect vLLM API Base URL
-VLLM_API_BASE=""
-if [ -n "$VLLM_API_BASE" ]; then
+# Check if already set in environment first
+if [ -n "${VLLM_API_BASE:-}" ]; then
     echo -e "${GREEN}✅ Using VLLM_API_BASE from environment${NC}"
 elif [ "$INSIDE_CLUSTER" = true ]; then
     # Inside cluster: try to find vLLM predictor service
-    VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" -o jsonpath='{.items[?(@.metadata.name=~".*predictor.*")].metadata.name}' 2>/dev/null | head -1 || echo "")
+    VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" 2>/dev/null | grep -i predictor | awk '{print $1}' | head -1 || echo "")
+    if [ -z "$VLLM_SERVICE" ]; then
+        # Try specific service name patterns
+        for svc_name in "llama-32-3b-instruct-predictor" "llama-*-predictor"; do
+            if oc get svc "$svc_name" -n "$NAMESPACE" &>/dev/null; then
+                VLLM_SERVICE="$svc_name"
+                break
+            fi
+        done
+    fi
     if [ -n "$VLLM_SERVICE" ]; then
-        VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[?(@.targetPort==8080 || @.port==8080)].targetPort}' 2>/dev/null || echo "8080")
+        VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].port}' 2>/dev/null || echo "80")
         VLLM_API_BASE="http://${VLLM_SERVICE}.${NAMESPACE}.svc.cluster.local:${VLLM_PORT}/v1"
         echo -e "${GREEN}✅ Detected vLLM service URL${NC}"
     else
-        echo -e "${YELLOW}⚠️  Could not detect vLLM service (optional)${NC}"
+        echo -e "${RED}❌ Could not detect vLLM service - REQUIRED for Module 3${NC}"
         VLLM_API_BASE=""
     fi
 else
     # Outside cluster: try to find vLLM route
-    VLLM_ROUTE=$(oc get route -n "$NAMESPACE" -o jsonpath='{.items[?(@.metadata.name=~".*predictor.*|.*inference.*|.*vllm.*")].spec.host}' 2>/dev/null | head -1 || echo "")
-    if [ -n "$VLLM_ROUTE" ]; then
-        VLLM_API_BASE="https://${VLLM_ROUTE}/v1"
-        echo -e "${GREEN}✅ Detected vLLM route URL${NC}"
-    else
-        echo -e "${YELLOW}⚠️  Could not detect vLLM route (optional)${NC}"
+    # First, find the predictor service (try multiple methods)
+    VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" -o jsonpath='{.items[?(@.metadata.name=~".*predictor.*")].metadata.name}' 2>/dev/null | head -1 || echo "")
+    
+    # Fallback: try grep if jsonpath fails
+    if [ -z "$VLLM_SERVICE" ]; then
+        VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" 2>/dev/null | grep -i predictor | awk '{print $1}' | head -1 || echo "")
+    fi
+    
+    # Fallback: try specific service name pattern
+    if [ -z "$VLLM_SERVICE" ]; then
+        # Try common service name patterns
+        for svc_name in "llama-32-3b-instruct-predictor" "llama-*-predictor" "*-predictor"; do
+            if oc get svc "$svc_name" -n "$NAMESPACE" &>/dev/null; then
+                VLLM_SERVICE="$svc_name"
+                break
+            fi
+        done
+    fi
+    
+    if [ -z "$VLLM_SERVICE" ]; then
+        echo -e "${RED}❌ Could not find vLLM predictor service${NC}"
+        echo -e "${YELLOW}   💡 Make sure the predictor service is deployed${NC}"
+        echo -e "${YELLOW}   💡 Check: oc get svc -n $NAMESPACE | grep predictor${NC}"
         VLLM_API_BASE=""
+    else
+        # Try multiple strategies to find the route
+        VLLM_ROUTE=""
+        
+        # Strategy 1: Find route that points to the predictor service
+        VLLM_ROUTE=$(oc get route -n "$NAMESPACE" -o jsonpath="{.items[?(@.spec.to.name==\"$VLLM_SERVICE\")].spec.host}" 2>/dev/null | head -1 || echo "")
+        
+        # Strategy 2: Find route by name pattern (using grep since jsonpath regex may not work)
+        if [ -z "$VLLM_ROUTE" ]; then
+            VLLM_ROUTE=$(oc get route -n "$NAMESPACE" 2>/dev/null | grep -iE "predictor|inference|vllm" | awk '{print $2}' | head -1 || echo "")
+        fi
+        
+        # Strategy 3: Try common route naming patterns
+        if [ -z "$VLLM_ROUTE" ]; then
+            SERVICE_BASE=$(echo "$VLLM_SERVICE" | sed 's/-predictor$//' | sed 's/-service$//')
+            for route_pattern in "${SERVICE_BASE}-route" "${SERVICE_BASE}" "vllm-route" "predictor-route"; do
+                if route_url=$(get_route_url "$route_pattern" "$NAMESPACE" 2>/dev/null); then
+                    VLLM_ROUTE="${route_url#https://}"
+                    break
+                fi
+            done
+        fi
+        
+        if [ -n "$VLLM_ROUTE" ]; then
+            VLLM_API_BASE="https://${VLLM_ROUTE}/v1"
+            echo -e "${GREEN}✅ Detected vLLM route URL${NC}"
+        else
+            # No route found - try to use service URL as fallback
+            VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].port}' 2>/dev/null || echo "80")
+            
+            # Check if we can use service URL (inside cluster or if port-forwarding)
+            if [ "$INSIDE_CLUSTER" = true ]; then
+                # Inside cluster: use service URL directly
+                VLLM_API_BASE="http://${VLLM_SERVICE}.${NAMESPACE}.svc.cluster.local:${VLLM_PORT}/v1"
+                echo -e "${GREEN}✅ Using vLLM service URL (inside cluster)${NC}"
+            else
+                # Outside cluster: try service URL (works if port-forwarding or VPN)
+                # But also provide route creation instructions
+                SERVICE_URL="http://${VLLM_SERVICE}.${NAMESPACE}.svc.cluster.local:${VLLM_PORT}/v1"
+                echo -e "${YELLOW}⚠️  No vLLM route found - using service URL${NC}"
+                echo -e "${YELLOW}   Service URL: $SERVICE_URL${NC}"
+                echo -e "${YELLOW}   💡 Note: Service URL only works inside cluster or with port-forwarding${NC}"
+                echo -e "${YELLOW}   💡 For external access, create a route:${NC}"
+                echo -e "${BLUE}      oc create route edge vllm-predictor-route \\${NC}"
+                echo -e "${BLUE}        --service=$VLLM_SERVICE \\${NC}"
+                echo -e "${BLUE}        --port=$VLLM_PORT \\${NC}"
+                echo -e "${BLUE}        -n $NAMESPACE${NC}"
+                echo -e "${YELLOW}   Or use port-forwarding:${NC}"
+                echo -e "${BLUE}      oc port-forward svc/$VLLM_SERVICE $VLLM_PORT:$VLLM_PORT -n $NAMESPACE${NC}"
+                echo -e "${BLUE}      Then use: http://localhost:$VLLM_PORT/v1${NC}"
+                VLLM_API_BASE="$SERVICE_URL"
+            fi
+        fi
     fi
 fi
+
+# Ensure VLLM_API_BASE is set (use empty string if not detected)
+VLLM_API_BASE="${VLLM_API_BASE:-}"
 
 # Generate .env file
 echo ""
@@ -168,21 +259,21 @@ LLAMA_MODEL=$MODEL
 # OpenShift namespace
 NAMESPACE=$NAMESPACE
 
-# MongoDB MCP Server URL (optional, only needed for Module 5)
+# MongoDB MCP Server URL (optional, only needed for Module 4 - AI Agents)
 # Inside cluster: Service URL (auto-detected)
 # Outside cluster: Route URL (auto-detected via oc command)
 # If auto-detection fails, set manually:
 # MCP_MONGODB_URL=https://mongodb-mcp-server-route-my-first-model.apps.ocp.example.com
 MCP_MONGODB_URL=$MCP_MONGODB_URL
 
-# vLLM API Base URL (optional, only needed for Module 2 Notebook 05)
+# vLLM API Base URL (REQUIRED for Module 3 - AI Evaluation, Notebook 05)
 # Inside cluster: Service URL (auto-detected)
 # Outside cluster: Route URL (auto-detected via oc command)
 # If auto-detection fails, set manually:
 # VLLM_API_BASE=https://model-predictor-route-my-first-model.apps.ocp.example.com/v1
 VLLM_API_BASE=$VLLM_API_BASE
 
-# OpenAI-compatible model name (for vLLM, used in Module 2 Notebook 05)
+# OpenAI-compatible model name (for vLLM, used in Module 3 - AI Evaluation, Notebook 05)
 OPENAI_MODEL=$OPENAI_MODEL
 EOF
 
@@ -190,8 +281,8 @@ echo -e "${GREEN}✅ .env file created: $ENV_FILE${NC}"
 echo ""
 echo "📋 Configuration:"
 echo "   LlamaStack URL: ${LLAMA_STACK_URL:-<not set - please configure>}"
-echo "   MongoDB MCP URL: ${MCP_MONGODB_URL:-<not set - optional>}"
-echo "   vLLM API Base: ${VLLM_API_BASE:-<not set - optional>}"
+echo "   MongoDB MCP URL: ${MCP_MONGODB_URL:-<not set - optional (Module 4)>}"
+echo "   vLLM API Base: ${VLLM_API_BASE:-<not set - REQUIRED (Module 3)>}"
 echo "   Model: $MODEL"
 echo "   OpenAI Model: $OPENAI_MODEL"
 echo "   Namespace: $NAMESPACE"
@@ -202,6 +293,21 @@ if [ -z "$LLAMA_STACK_URL" ]; then
     echo "   Please configure it manually:"
     echo "   1. Edit $ENV_FILE"
     echo "   2. Or set: export LLAMA_STACK_URL='https://<your-route>'"
+    echo ""
+fi
+
+if [ -z "$VLLM_API_BASE" ]; then
+    echo -e "${RED}⚠️  WARNING: VLLM_API_BASE is not set!${NC}"
+    echo -e "${RED}   This is REQUIRED for Module 3 (AI Evaluation)${NC}"
+    echo "   Please configure it manually:"
+    echo "   1. Create a route for the predictor service (see instructions above)"
+    echo "   2. Or edit $ENV_FILE and set VLLM_API_BASE"
+    echo "   3. Or set: export VLLM_API_BASE='https://<route-host>/v1'"
+    echo ""
+elif [[ "$VLLM_API_BASE" == http://*.svc.cluster.local* ]] && [ "$INSIDE_CLUSTER" != true ]; then
+    echo -e "${YELLOW}⚠️  NOTE: Using vLLM service URL (not route)${NC}"
+    echo -e "${YELLOW}   This works if you're using port-forwarding or VPN${NC}"
+    echo -e "${YELLOW}   For external access, consider creating a route (see instructions above)${NC}"
     echo ""
 fi
 

@@ -18,8 +18,8 @@ Perfect for running vLLM inference models and GPU-accelerated workloads.
 ### Using the Script (Recommended)
 
 ```bash
-cd openshift/scripts
-./create-gpu-workers.sh
+# From project root
+./scripts/create-gpu-workers.sh
 ```
 
 The script automatically:

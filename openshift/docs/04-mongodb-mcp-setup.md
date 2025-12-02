@@ -15,8 +15,8 @@ This guide deploys:
 ### Using Deployment Script (Recommended)
 
 ```bash
-cd openshift/scripts
-./deploy-mongodb-mcp.sh
+# From project root
+./scripts/deploy-mongodb-mcp.sh
 ```
 
 The script automatically:

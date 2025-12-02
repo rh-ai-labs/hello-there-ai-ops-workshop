@@ -47,7 +47,7 @@ echo ""
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MANIFESTS_DIR="${SCRIPT_DIR}/../manifests"
+MANIFESTS_DIR="${SCRIPT_DIR}/../openshift/manifests"
 
 # Step 1: Create MongoDB secret and init script ConfigMap
 echo -e "${BLUE}🔐 Step 1: Creating MongoDB secret and init script...${NC}"
