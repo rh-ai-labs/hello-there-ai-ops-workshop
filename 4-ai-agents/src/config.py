@@ -13,7 +13,7 @@ try:
     from dotenv import load_dotenv
     # Load .env file from the notebooks directory or parent directory
     env_paths = [
-        Path(__file__).parent.parent / ".env",  # 5-autonomous-agents/.env
+        Path(__file__).parent.parent / ".env",  # 4-ai-agents/.env
         Path(__file__).parent / ".env",         # src/.env (fallback)
     ]
     for env_path in env_paths:

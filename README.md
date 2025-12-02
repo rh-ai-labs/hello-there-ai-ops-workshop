@@ -82,10 +82,10 @@ Cada módulo pode ser executado independentemente. Veja a seção [📚 Módulos
 
 **Ordem Recomendada:**
 1. Módulo 1: IA 101 na Prática
-2. Módulo 2: Avaliação e Geração de Close Notes
-3. Módulo 3: Redução de MTTR com RAG
-4. Módulo 4: Análise Preditiva com Fine-tuning
-5. Módulo 5: Agentes Autônomos
+2. Módulo 2: Redução de MTTR com RAG
+3. Módulo 3: Avaliação e Geração de Close Notes
+4. Módulo 4: Agentes Autônomos
+5. Módulo 5: Análise Preditiva com Fine-tuning
 
 ---
 
@@ -134,47 +134,12 @@ This workshop follows design principles inspired by **Apple Genius Bar tutorials
 - **Decision Trees:** Árvores de decisão para classificação
 - **OpenShift AI:** Plataforma empresarial para IA/ML
 
-**Localização:** [`1-play-tennis/`](./1-play-tennis/)  
-**README:** [Module 1 README](./1-play-tennis/README.md)
+**Localização:** [`1-ai-fundamentals/`](./1-ai-fundamentals/)  
+**README:** [Module 1 README](./1-ai-fundamentals/README.md)
 
 ---
 
-### 2. Avaliação e Geração de Close Notes com IA
-
-**Objetivo:** Avaliar e gerar close notes (notas de encerramento) de alta qualidade para incidentes de TI usando diferentes métodos de avaliação com IA.
-
-**Problema:** Close notes mal escritas dificultam a resolução futura de incidentes similares, aumentando o MTTD (Mean Time To Detect).
-
-**Solução:** Workflow educativo que ensina a avaliar qualidade de close notes usando métodos progressivos:
-1. Métricas simples (n-gram) como baseline
-2. Similaridade semântica usando embeddings
-3. Avaliação estruturada com LLM-as-a-Judge
-
-**Notebooks:**
-1. **01_load_and_explore_dataset.ipynb** - Carrega e explora dataset de incidentes
-2. **02_create_ground_truth.ipynb** - Define e separa exemplos bons vs ruins
-3. **03_ngram_comparisons.ipynb** - Testa se métricas simples funcionam
-4. **04_semantics_analysis.ipynb** - Avalia similaridade semântica usando embeddings
-5. **05_llm_as_judge_evaluation.ipynb** - Avaliação estruturada com múltiplos critérios usando LLM
-6. **06_llm_generation_evaluation.ipynb** - Geração e avaliação de close notes (TODO)
-
-**Conceitos-chave:**
-- **Ground Truth:** Definição de qualidade para close notes
-- **N-gram Metrics:** Métricas de sobreposição de palavras (baseline)
-- **Semantic Similarity:** Comparação de significado usando embeddings
-- **LLM-as-a-Judge:** Avaliação estruturada com critérios múltiplos
-
-**O que você vai aprender:**
-- Como avaliar qualidade de texto usando diferentes métodos
-- Quando usar cada método de avaliação
-- Como aplicar LLM-as-a-Judge para avaliação estruturada
-
-**Localização:** [`2-reducing-mttd/`](./2-reducing-mttd/)  
-**README:** [Module 2 README](./2-reducing-mttd/README.md)
-
----
-
-### 3. Redução de MTTR: Busca por Similaridade entre Incidentes
+### 2. Redução de MTTR: Busca por Similaridade entre Incidentes
 
 **Objetivo:** Demonstrar como identificar incidentes similares usando busca semântica para reduzir o MTTR (Mean Time To Resolve).
 
@@ -214,12 +179,94 @@ This workshop follows design principles inspired by **Apple Genius Bar tutorials
 - LlamaStack rodando no OpenShift (ou localmente)
 - Configuração do ambiente via `./scripts/setup-env.sh`
 
-**Localização:** [`3-rag/`](./3-rag/)  
-**README:** [Module 3 README](./3-rag/README.md)
+**Localização:** [`2-ai-rag/`](./2-ai-rag/)  
+**README:** [Module 2 README](./2-ai-rag/README.md)
 
 ---
 
-### 4. Análise Preditiva: Identificando Mudanças que Geram Incidentes
+### 3. Avaliação e Geração de Close Notes com IA
+
+**Objetivo:** Avaliar e gerar close notes (notas de encerramento) de alta qualidade para incidentes de TI usando diferentes métodos de avaliação com IA.
+
+**Problema:** Close notes mal escritas dificultam a resolução futura de incidentes similares, aumentando o MTTD (Mean Time To Detect).
+
+**Solução:** Workflow educativo que ensina a avaliar qualidade de close notes usando métodos progressivos:
+1. Métricas simples (n-gram) como baseline
+2. Similaridade semântica usando embeddings
+3. Avaliação estruturada com LLM-as-a-Judge
+
+**Notebooks:**
+1. **01_load_and_explore_dataset.ipynb** - Carrega e explora dataset de incidentes
+2. **02_create_ground_truth.ipynb** - Define e separa exemplos bons vs ruins
+3. **03_ngram_comparisons.ipynb** - Testa se métricas simples funcionam
+4. **04_semantics_analysis.ipynb** - Avalia similaridade semântica usando embeddings
+5. **05_llm_as_judge_evaluation.ipynb** - Avaliação estruturada com múltiplos critérios usando LLM
+6. **06_llm_generation_evaluation.ipynb** - Geração e avaliação de close notes (TODO)
+
+**Conceitos-chave:**
+- **Ground Truth:** Definição de qualidade para close notes
+- **N-gram Metrics:** Métricas de sobreposição de palavras (baseline)
+- **Semantic Similarity:** Comparação de significado usando embeddings
+- **LLM-as-a-Judge:** Avaliação estruturada com critérios múltiplos
+
+**O que você vai aprender:**
+- Como avaliar qualidade de texto usando diferentes métodos
+- Quando usar cada método de avaliação
+- Como aplicar LLM-as-a-Judge para avaliação estruturada
+
+**Localização:** [`3-ai-evaluation/`](./3-ai-evaluation/)  
+**README:** [Module 3 README](./3-ai-evaluation/README.md)
+
+---
+
+### 4. Agentes Autônomos: Integrando Análise + Ação
+
+**Objetivo:** Construir um agente que consiga tomar ações no contexto de operações de TI para remediar o ambiente automaticamente.
+
+**Problema:** Análises e recomendações são úteis, mas ainda requerem ação manual. Como automatizar a remediação?
+
+**Solução:** Agente autônomo que:
+- Analisa o estado do ambiente
+- Identifica problemas e oportunidades de melhoria
+- Toma ações corretivas automaticamente
+- Aprende com resultados das ações
+
+**Notebooks:**
+1. **01_introduction_to_agents.ipynb** - Introdução aos conceitos de agentes autônomos
+2. **02_building_simple_agent.ipynb** - Construção de um agente simples com ferramentas e memória
+3. **03_llamastack_core_features.ipynb** - Recursos principais do LlamaStack: Chat e RAG
+4. **04_mcp_tools.ipynb** - Protocolo MCP (Model Context Protocol) e criação de ferramentas customizadas
+5. **05_safety_shields.ipynb** - Implementação de escudos de segurança e moderação de conteúdo
+6. **06_multi_metric_evaluation.ipynb** - Avaliação de agentes usando múltiplas métricas incluindo LLM-as-a-Judge
+
+**Conceitos-chave:**
+- **Agentes Autônomos:** Sistemas que podem raciocinar, planejar e agir
+- **Ferramentas (Tools):** Funções que agentes podem chamar para interagir com o mundo
+- **Memória:** Memória de curto e longo prazo para agentes
+- **MCP (Model Context Protocol):** Protocolo padronizado para integração de ferramentas
+- **Safety Shields:** Moderação de conteúdo e verificações de segurança
+- **Avaliação Multi-métrica:** Avaliação de agentes usando múltiplos critérios
+
+**O que você vai aprender:**
+- Conceitos de agentes autônomos
+- Como integrar análise com ação
+- Framework para construção de agentes
+- Técnicas de feedback e aprendizado contínuo
+- Como criar ferramentas customizadas usando MCP
+- Implementação de segurança e moderação de conteúdo
+- Métodos de avaliação de agentes
+
+**Pré-requisitos:**
+- LlamaStack rodando no OpenShift
+- Ollama com modelo llama3.2:3b (para alguns exemplos)
+- Configuração do ambiente via `./scripts/setup-env.sh`
+
+**Localização:** [`4-ai-agents/`](./4-ai-agents/)  
+**README:** [Module 4 README](./4-ai-agents/README.md)
+
+---
+
+### 5. Análise Preditiva: Identificando Mudanças que Geram Incidentes
 
 **Objetivo:** Demonstrar como um modelo pode aprender a avaliar alterações em código, configuração ou infraestrutura e estimar o risco de cada mudança gerar um incidente.
 
@@ -269,55 +316,8 @@ This workshop follows design principles inspired by **Apple Genius Bar tutorials
 - Conta no Hugging Face (para download de modelos)
 - GPU recomendada (mas funciona em CPU também)
 
-**Localização:** [`4-predictive-analysis/`](./4-predictive-analysis/)  
-**README:** [Module 4 README](./4-predictive-analysis/README.md)
-
----
-
-### 5. Agentes Autônomos: Integrando Análise + Ação
-
-**Objetivo:** Construir um agente que consiga tomar ações no contexto de operações de TI para remediar o ambiente automaticamente.
-
-**Problema:** Análises e recomendações são úteis, mas ainda requerem ação manual. Como automatizar a remediação?
-
-**Solução:** Agente autônomo que:
-- Analisa o estado do ambiente
-- Identifica problemas e oportunidades de melhoria
-- Toma ações corretivas automaticamente
-- Aprende com resultados das ações
-
-**Notebooks:**
-1. **01_introduction_to_agents.ipynb** - Introdução aos conceitos de agentes autônomos
-2. **02_building_simple_agent.ipynb** - Construção de um agente simples com ferramentas e memória
-3. **03_llamastack_core_features.ipynb** - Recursos principais do LlamaStack: Chat e RAG
-4. **04_mcp_tools.ipynb** - Protocolo MCP (Model Context Protocol) e criação de ferramentas customizadas
-5. **05_safety_shields.ipynb** - Implementação de escudos de segurança e moderação de conteúdo
-6. **06_multi_metric_evaluation.ipynb** - Avaliação de agentes usando múltiplas métricas incluindo LLM-as-a-Judge
-
-**Conceitos-chave:**
-- **Agentes Autônomos:** Sistemas que podem raciocinar, planejar e agir
-- **Ferramentas (Tools):** Funções que agentes podem chamar para interagir com o mundo
-- **Memória:** Memória de curto e longo prazo para agentes
-- **MCP (Model Context Protocol):** Protocolo padronizado para integração de ferramentas
-- **Safety Shields:** Moderação de conteúdo e verificações de segurança
-- **Avaliação Multi-métrica:** Avaliação de agentes usando múltiplos critérios
-
-**O que você vai aprender:**
-- Conceitos de agentes autônomos
-- Como integrar análise com ação
-- Framework para construção de agentes
-- Técnicas de feedback e aprendizado contínuo
-- Como criar ferramentas customizadas usando MCP
-- Implementação de segurança e moderação de conteúdo
-- Métodos de avaliação de agentes
-
-**Pré-requisitos:**
-- LlamaStack rodando no OpenShift
-- Ollama com modelo llama3.2:3b (para alguns exemplos)
-- Configuração do ambiente via `./scripts/setup-env.sh`
-
-**Localização:** [`5-autonomous-agents/`](./5-autonomous-agents/)  
-**README:** [Module 5 README](./5-autonomous-agents/README.md)
+**Localização:** [`5-ai-fine-tuning/`](./5-ai-fine-tuning/)  
+**README:** [Module 5 README](./5-ai-fine-tuning/README.md)
 
 ---
 
@@ -342,11 +342,11 @@ hello-there-ai-ops-workshop/
 │   ├── README.md
 │   ├── manifests/
 │   └── scripts/
-├── 1-play-tennis/              # Módulo 1
-├── 2-reducing-mttd/            # Módulo 2
-├── 3-rag/                      # Módulo 3
-├── 4-predictive-analysis/      # Módulo 4
-└── 5-autonomous-agents/        # Módulo 5
+├── 1-ai-fundamentals/          # Módulo 1
+├── 2-ai-rag/                  # Módulo 2
+├── 3-ai-evaluation/            # Módulo 3
+├── 4-ai-agents/               # Módulo 4
+└── 5-ai-fine-tuning/          # Módulo 5
 ```
 
 ---

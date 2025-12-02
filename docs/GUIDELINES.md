@@ -61,7 +61,7 @@ This document defines the standards and guidelines for creating workshop content
 
 **Folders:**
 - Format: `{number}-{kebab-case-name}`
-- Examples: `1-play-tennis`, `2-reducing-mttd`, `5-autonomous-agents`
+- Examples: `1-ai-fundamentals`, `2-ai-rag`, `3-ai-evaluation`, `4-ai-agents`, `5-ai-fine-tuning`
 - Numbers indicate sequence/order
 - Use descriptive, action-oriented names
 

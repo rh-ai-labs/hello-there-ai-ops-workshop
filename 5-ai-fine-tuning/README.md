@@ -1,4 +1,4 @@
-# Module 4: Predictive Analysis - Fine-tuning for Risk Assessment
+# Module 5: Predictive Analysis - Fine-tuning for Risk Assessment
 
 **Project:** AI Test Drive – Workshop de IA para Operações de TI  
 **Goal:** Demonstrate how to fine-tune a language model to assess changes and estimate the risk of each change generating an incident
@@ -200,7 +200,7 @@ Execute notebooks in order:
 ## 📊 Project Structure
 
 ```
-4-predictive-analysis/
+5-ai-fine-tuning/
 ├── README.md              # This file
 ├── notebooks/             # Jupyter notebooks
 │   ├── 01_fine_tune_dataset.ipynb
@@ -301,7 +301,7 @@ The fine-tuning approach demonstrated here can be used for:
 
 After completing this module, you'll be ready for:
 
-- **Module 5:** `5-autonomous-agents/` - Build autonomous agents that can use fine-tuned models for decision-making
+- **Advanced Fine-tuning:** Explore other techniques like QLoRA, full fine-tuning, or RLHF
 - **Advanced Fine-tuning:** Explore other techniques like QLoRA, full fine-tuning, or RLHF
 
 **Related Resources:**

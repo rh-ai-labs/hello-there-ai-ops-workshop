@@ -1,4 +1,4 @@
-# Module 3: Reducing MTTR with Semantic Search
+# Module 2: Reducing MTTR with Semantic Search
 
 **Project:** AI Test Drive – Workshop de IA para Operações de TI  
 **Goal:** Demonstrate how to identify similar incidents using semantic search to reduce MTTR (Mean Time To Resolve)
@@ -176,7 +176,7 @@ Execute notebooks in order:
 ## 📊 Project Structure
 
 ```
-3-rag/
+2-ai-rag/
 ├── README.md              # This file
 ├── notebooks/             # Jupyter notebooks
 │   ├── 01_simple_rag_llama_stack_chromadb.ipynb
@@ -260,8 +260,8 @@ The RAG approach demonstrated here can be used for:
 
 After completing this module, you'll be ready for:
 
-- **Module 4:** `4-predictive-analysis/` - Learn fine-tuning techniques for predictive analysis
-- **Module 5:** `5-autonomous-agents/` - Build autonomous agents that can take actions based on RAG results
+- **Module 3:** `3-ai-evaluation/` - Learn how to evaluate AI outputs using multiple evaluation methods
+- **Module 4:** `4-ai-agents/` - Build autonomous agents that can take actions based on RAG results
 
 **Related Resources:**
 - [LlamaStack Documentation](https://github.com/llamastack/llamastack)
