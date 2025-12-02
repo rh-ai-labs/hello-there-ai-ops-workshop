@@ -1,453 +1,114 @@
-# Llama Stack OpenShift Deployment
+# OpenShift Deployment Guide
 
-This directory contains OpenShift manifests and deployment scripts for deploying Llama Stack and related services on OpenShift using the LlamaStackDistribution Custom Resource.
+Welcome! This guide helps you deploy LlamaStack and related services on OpenShift.
 
-## Directory Structure
+## 🚀 Quick Start
+
+**New to this?** Start here → [Getting Started Guide](docs/01-getting-started.md)
+
+**Just need a quick reference?** → [Quick Reference](docs/quick-reference.md)
+
+**Having issues?** → [Troubleshooting Guide](docs/troubleshooting.md)
+
+---
+
+## 📚 Documentation Index
+
+### Getting Started
+- **[01. Getting Started](docs/01-getting-started.md)** - Complete setup from scratch
+- **[02. Prerequisites Checklist](docs/02-prerequisites.md)** - What you need before starting
+
+### Deployment Guides
+- **[03. LlamaStack Deployment](docs/03-llamastack-deployment.md)** - Deploy LlamaStack on OpenShift
+- **[04. MongoDB & MCP Setup](docs/04-mongodb-mcp-setup.md)** - Deploy MongoDB and MCP server
+- **[05. GPU Worker Nodes](docs/05-gpu-worker-nodes.md)** - Add GPU nodes for inference
+
+### Integration Guides
+- **[06. MCP Integration](docs/06-mcp-integration.md)** - Complete MCP implementation guide
+- **[07. Agent Configuration](docs/07-agent-configuration.md)** - Configure agents with tools
+
+### Reference
+- **[Quick Reference](docs/quick-reference.md)** - Common commands and configurations
+- **[Troubleshooting](docs/troubleshooting.md)** - Solutions to common issues
+- **[Architecture Overview](docs/architecture.md)** - System architecture and components
+
+---
+
+## 🎯 Common Tasks
+
+### Deploy Everything
+```bash
+# 1. Deploy LlamaStack
+./scripts/deploy-llamastack.sh
+
+# 2. Deploy MongoDB & MCP
+./scripts/deploy-mongodb-mcp.sh
+
+# 3. Register MCP with LlamaStack
+./scripts/register-mongodb-mcp.sh
+```
+
+### Add GPU Nodes
+```bash
+./scripts/create-gpu-workers.sh
+```
+
+### Test Deployment
+```bash
+# Test LlamaStack
+./scripts/test-llamastack.sh
+
+# Test MongoDB MCP agent
+python openshift/scripts/test-mongodb-agent.py
+```
+
+---
+
+## 📁 Directory Structure
 
 ```
 openshift/
-├── README.md                    # This file
-├── docs/                        # Additional documentation
-│   └── MONGODB_MCP_DEPLOYMENT.md
+├── README.md                    # This file - start here!
+├── docs/                        # 📚 All documentation
+│   ├── 01-getting-started.md   # First-time setup guide
+│   ├── 02-prerequisites.md     # Prerequisites checklist
+│   ├── 03-llamastack-deployment.md
+│   ├── 04-mongodb-mcp-setup.md
+│   ├── 05-gpu-worker-nodes.md
+│   ├── 06-mcp-integration.md
+│   ├── 07-agent-configuration.md
+│   ├── quick-reference.md      # Quick reference card
+│   ├── troubleshooting.md      # Common issues & solutions
+│   └── architecture.md         # System architecture
 ├── manifests/                   # Kubernetes/OpenShift manifests
-│   ├── llamastack/             # LlamaStack deployment manifests
-│   │   ├── llamastackdistribution-inline-faiss.yaml
-│   │   ├── llamastackdistribution-inline-milvus.yaml
-│   │   ├── llamastackdistribution-remote-milvus.yaml
-│   │   ├── llamastack-route.yaml
-│   │   └── llamastack-route-insecure.yaml
-│   ├── mongodb/                # MongoDB and MCP server manifests
-│   │   ├── mongodb-deployment.yaml
-│   │   ├── mongodb-mcp-server-deployment.yaml
-│   │   └── mongodb-secret.yaml
+│   ├── llamastack/            # LlamaStack deployments
+│   ├── mongodb/               # MongoDB & MCP server
+│   ├── infrastructure/        # GPU nodes, etc.
 │   └── secrets/               # Secret templates
-│       ├── llama-stack-inference-model-secret.yaml
-│       └── milvus-secret.yaml
-└── scripts/                    # Deployment and utility scripts
-    ├── deploy-llamastack.sh   # Main LlamaStack deployment script
-    ├── deploy-mongodb-mcp.sh   # MongoDB and MCP server deployment
-    └── test-llamastack.sh      # Testing script
+└── scripts/                     # Deployment scripts
+    ├── deploy-llamastack.sh
+    ├── deploy-mongodb-mcp.sh
+    ├── register-mongodb-mcp.sh
+    └── create-gpu-workers.sh
 ```
 
-## Prerequisites
+---
 
-1. **OpenShift 4.19 or newer** installed
-2. **GPU support enabled** in OpenShift AI (Node Feature Discovery Operator and NVIDIA GPU Operator)
-3. **Cluster administrator privileges** for your OpenShift cluster
-4. **Logged in to Red Hat OpenShift AI**
-5. **Llama Stack Operator activated** in OpenShift AI
-6. **vLLM inference model deployed** with:
-   - External route enabled
-   - Token authentication enabled
-   - `--enable-auto-tool-choice` runtime argument added
-7. **OpenShift CLI (oc)** installed and configured
+## 🆘 Need Help?
 
-## Quick Start
+1. **Check the [Troubleshooting Guide](docs/troubleshooting.md)**
+2. **Review the [Quick Reference](docs/quick-reference.md)**
+3. **Read the detailed guides** in the `docs/` folder
 
-### Option 1: Using the Deployment Script (Recommended)
+---
 
-1. **Set your configuration** (update these values as needed):
+## ✅ What's Next?
 
-```bash
-export NAMESPACE="my-first-model"
-export INFERENCE_MODEL="llama-32-3b-instruct"
-export VLLM_URL="http://llama-32-3b-instruct-predictor.my-first-model.svc.cluster.local:8080/v1"
-export VLLM_TLS_VERIFY="false"  # Use "true" in production
-export VLLM_API_TOKEN="<your-token>"
-export DEPLOYMENT_TYPE="milvus-inline"  # Options: milvus-inline, faiss-inline, milvus-remote
-```
+1. ✅ **Read** [Getting Started Guide](docs/01-getting-started.md)
+2. ✅ **Deploy** LlamaStack and MongoDB
+3. ✅ **Configure** agents with MCP tools
+4. ✅ **Start building** your AI agents!
 
-2. **Log in to OpenShift**:
+---
 
-```bash
-# In the OpenShift web console, click your username → Copy login command → Display token
-# Then paste the command:
-oc login --token=<token> --server=<openshift_cluster_url>
-```
-
-3. **Run the deployment script**:
-
-```bash
-cd openshift/scripts
-chmod +x deploy-llamastack.sh
-./deploy-llamastack.sh
-```
-
-### Option 2: Manual Deployment
-
-1. **Create the inference model secret**:
-
-```bash
-export NAMESPACE="my-first-model"
-export INFERENCE_MODEL="llama-32-3b-instruct"
-export VLLM_URL="http://llama-32-3b-instruct-predictor.my-first-model.svc.cluster.local:8080/v1"
-export VLLM_TLS_VERIFY="false"
-export VLLM_API_TOKEN="<your-token>"
-
-oc create secret generic llama-stack-inference-model-secret \
-  --from-literal=INFERENCE_MODEL="$INFERENCE_MODEL" \
-  --from-literal=VLLM_URL="$VLLM_URL" \
-  --from-literal=VLLM_TLS_VERIFY="$VLLM_TLS_VERIFY" \
-  --from-literal=VLLM_API_TOKEN="$VLLM_API_TOKEN" \
-  --namespace="$NAMESPACE"
-```
-
-2. **Deploy LlamaStackDistribution**:
-
-Choose one of the following deployment types:
-
-#### Example A: Inline Milvus (Development/Testing)
-
-```bash
-oc apply -f manifests/llamastack/llamastackdistribution-inline-milvus.yaml
-```
-
-#### Example B: Inline FAISS (Experimental/Testing)
-
-```bash
-oc apply -f manifests/llamastack/llamastackdistribution-inline-faiss.yaml
-```
-
-#### Example C: Remote Milvus (Production)
-
-First, create the Milvus connection secret:
-
-```bash
-export MILVUS_ENDPOINT="tcp://milvus-service:19530"
-export MILVUS_TOKEN="<milvus-root-or-user-token>"
-export MILVUS_CONSISTENCY_LEVEL="Bounded"
-
-oc create secret generic milvus-secret \
-  --from-literal=MILVUS_ENDPOINT="$MILVUS_ENDPOINT" \
-  --from-literal=MILVUS_TOKEN="$MILVUS_TOKEN" \
-  --from-literal=MILVUS_CONSISTENCY_LEVEL="$MILVUS_CONSISTENCY_LEVEL" \
-  --namespace="$NAMESPACE"
-```
-
-Then deploy:
-
-```bash
-oc apply -f manifests/llamastack/llamastackdistribution-remote-milvus.yaml
-```
-
-## Verification
-
-1. **Check pod status**:
-
-```bash
-oc get pods -n my-first-model -l app=llama-stack
-```
-
-2. **View pod logs**:
-
-```bash
-oc logs -l app=llama-stack -n my-first-model
-```
-
-Look for output similar to:
-```
-INFO     2025-05-15 11:23:52,750 __main__:498 server: Listening on ['::', '0.0.0.0']:8321
-INFO:     Started server process [1]
-INFO:     Waiting for application startup.
-INFO     2025-05-15 11:23:52,765 __main__:151 server: Starting up
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://['::', '0.0.0.0']:8321 (Press CTRL+C to quit)
-```
-
-3. **Check service**:
-
-```bash
-oc get svc -n my-first-model
-```
-
-4. **Create Route for external access** (recommended):
-
-```bash
-# Create route with TLS termination
-oc apply -f manifests/llamastack/llamastack-route.yaml
-
-# Or create insecure route (for testing)
-oc apply -f manifests/llamastack/llamastack-route-insecure.yaml
-
-# Get the route URL
-oc get route llamastack-route -n my-first-model -o jsonpath='{.spec.host}'
-```
-
-The route will be accessible at `https://<route-host>` (OpenShift will auto-generate the hostname).
-
-5. **Or port forward to access locally**:
-
-```bash
-oc port-forward -n my-first-model svc/lsd-llama-milvus-inline-service 8321:8321
-```
-
-Then access at `http://localhost:8321`
-
-## Testing
-
-### Quick Test Scripts
-
-We provide test scripts to verify your deployment:
-
-#### Option 1: Bash Test Script
-
-```bash
-cd openshift/scripts
-
-# Option A: Use Route (if created)
-export LLAMA_STACK_URL="https://$(oc get route llamastack-route -n my-first-model -o jsonpath='{.spec.host}')"
-./test-llamastack.sh
-
-# Option B: Use port-forward (in another terminal)
-oc port-forward -n my-first-model svc/lsd-llama-milvus-inline-service 8321:8321
-# Then in this terminal:
-./test-llamastack.sh
-```
-
-The script will:
-- Test health endpoint (`/health`)
-- List available models (`/v1/models`)
-- Test chat completion (`/v1/chat/completions`)
-- Test agents endpoint (`/v1/agents`)
-- Test ingestion endpoint (`/v1/ingest`)
-
-### Manual Testing with curl
-
-**Option A: Using Route (recommended)**
-
-```bash
-# Get route URL
-ROUTE_URL=$(oc get route llamastack-route -n my-first-model -o jsonpath='{.spec.host}')
-
-# Test health endpoint
-curl https://$ROUTE_URL/health
-
-# List models
-curl https://$ROUTE_URL/v1/models | jq
-
-# Test chat completion
-curl -X POST https://$ROUTE_URL/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "vllm-inference/llama-32-3b-instruct",
-    "messages": [{"role": "user", "content": "Say hello"}],
-    "max_tokens": 50
-  }' | jq
-```
-
-**Option B: Using port-forward**
-
-1. **Start port-forward** (in a separate terminal):
-
-```bash
-oc port-forward -n my-first-model svc/lsd-llama-milvus-inline-service 8321:8321
-```
-
-2. **Test health endpoint**:
-
-```bash
-curl http://localhost:8321/health
-```
-
-Expected response: `{"status": "healthy"}` or similar
-
-3. **List available models**:
-
-```bash
-curl http://localhost:8321/v1/models | jq
-```
-
-4. **Test chat completion**:
-
-```bash
-curl -X POST http://localhost:8321/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "vllm-inference/llama-32-3b-instruct",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Say hello in one sentence"
-      }
-    ],
-    "max_tokens": 50
-  }' | jq
-```
-
-### Testing from Jupyter Notebook
-
-If you have a Jupyter notebook running in the same namespace or cluster:
-
-```python
-from llama_stack_client import LlamaStackClient
-
-# Use the service URL directly (no port-forward needed)
-client = LlamaStackClient(base_url='http://lsd-llama-milvus-inline-service.my-first-model.svc.cluster.local:8321')
-
-# Or use localhost if port-forwarding
-# client = LlamaStackClient(base_url='http://localhost:8321')
-
-# List models
-models = client.models.list()
-print(f"Available models: {models.data}")
-
-# Create a chat completion
-response = client.chat.completions.create(
-    model=models.data[0].id,
-    messages=[
-        {"role": "user", "content": "Say hello"}
-    ],
-    max_tokens=50
-)
-
-print(response.choices[0].message.content)
-```
-
-### Testing from Within the Cluster
-
-If you're running tests from another pod in the cluster:
-
-```python
-from llama_stack_client import LlamaStackClient
-
-# Use the internal service URL
-client = LlamaStackClient(
-    base_url='http://lsd-llama-milvus-inline.my-first-model.svc.cluster.local:8321'
-)
-```
-
-## Additional Services
-
-### MongoDB and MongoDB MCP Server
-
-To deploy MongoDB and the MongoDB MCP server:
-
-```bash
-cd openshift/scripts
-./deploy-mongodb-mcp.sh
-```
-
-**Note:** The MongoDB deployment includes an initialization script that automatically populates the database with sample IT operations data (incidents, services, alerts) when the container starts for the first time. This data is ready to use with the MongoDB MCP server in notebook 04.
-
-See [docs/MONGODB_MCP_DEPLOYMENT.md](./docs/MONGODB_MCP_DEPLOYMENT.md) for detailed instructions.
-
-## Important Notes
-
-1. **vLLM URL**: Update the `VLLM_URL` in the secret to match your actual vLLM endpoint. The URL should:
-   - End with `/v1`
-   - Use the internal service name if vLLM is in the same cluster
-   - Use HTTP (not HTTPS) for internal cluster communication
-   - Include the correct port (typically 8080)
-
-2. **Model Identifier**: Ensure `INFERENCE_MODEL` matches the model identifier used when deploying vLLM.
-
-3. **API Token**: Replace `VLLM_API_TOKEN` with your actual API token if token authentication is enabled.
-
-4. **Namespace**: All manifests use `my-first-model` namespace by default. Update if using a different namespace.
-
-5. **Disconnected Environments**: If deploying in a disconnected environment, add these environment variables to the LlamaStackDistribution CR:
-   ```yaml
-   - name: SENTENCE_TRANSFORMERS_HOME
-     value: /opt/app-root/src/.cache/huggingface/hub
-   - name: HF_HUB_OFFLINE
-     value: "1"
-   - name: TRANSFORMERS_OFFLINE
-     value: "1"
-   - name: HF_DATASETS_OFFLINE
-     value: "1"
-   ```
-
-## Troubleshooting
-
-### Pod not starting
-
-```bash
-# Check pod events
-oc describe pod -l app=llama-stack -n my-first-model
-
-# Check logs
-oc logs -l app=llama-stack -n my-first-model
-```
-
-### Cannot connect to vLLM endpoint (Connection Error)
-
-This is the most common issue. The error `VLLMInferenceAdapter.list_provider_model_ids() failed with: Connection error` means Llama Stack cannot reach the vLLM service.
-
-**Quick Fix:**
-
-```bash
-cd openshift/scripts
-
-# Set your vLLM internal URL (without /v1, script will add it)
-export VLLM_BASE_URL="http://llama-32-3b-instruct-predictor.my-first-model.svc.cluster.local:8080"
-export VLLM_API_TOKEN="<your-token>"
-
-# Update the secret
-./update-vllm-url.sh  # If this script exists
-```
-
-**Common fixes:**
-
-1. **Use correct internal URL format** (HTTP, not HTTPS, with /v1 suffix):
-   ```bash
-   # Find vLLM service
-   oc get svc --all-namespaces | grep predictor
-   
-   # Update secret with correct internal URL
-   # For internal cluster communication, use HTTP (not HTTPS)
-   export VLLM_URL="http://llama-32-3b-instruct-predictor.my-first-model.svc.cluster.local:8080/v1"
-   export VLLM_TLS_VERIFY="false"
-   export VLLM_API_TOKEN="<token>"
-   export INFERENCE_MODEL="llama-32-3b-instruct"
-   
-   oc create secret generic llama-stack-inference-model-secret \
-     --from-literal=VLLM_URL="$VLLM_URL" \
-     --from-literal=VLLM_TLS_VERIFY="$VLLM_TLS_VERIFY" \
-     --from-literal=VLLM_API_TOKEN="$VLLM_API_TOKEN" \
-     --from-literal=INFERENCE_MODEL="$INFERENCE_MODEL" \
-     --namespace="my-first-model" \
-     --dry-run=client -o yaml | oc apply -f -
-   
-   # Restart pod to pick up new secret
-   oc delete pod -l app=llama-stack -n my-first-model
-   ```
-   
-   **Important:** 
-   - Use `http://` (not `https://`) for internal cluster communication
-   - URL must end with `/v1`
-   - Use full FQDN: `<service-name>.<namespace>.svc.cluster.local`
-   - Include the correct port (typically 8080, not 80)
-
-2. **Check network policies:**
-   ```bash
-   oc get networkpolicies -n my-first-model
-   oc get networkpolicies -n <vllm-namespace>
-   ```
-
-3. **Test connectivity from pod:**
-   ```bash
-   POD_NAME=$(oc get pods -n my-first-model -l app=llama-stack -o jsonpath='{.items[0].metadata.name}')
-   oc exec $POD_NAME -n my-first-model -- curl -v http://llama-32-3b-instruct-predictor.my-first-model.svc.cluster.local:8080/v1/models
-   ```
-
-4. **Verify vLLM service exists and is running:**
-   ```bash
-   oc get svc --all-namespaces | grep vllm
-   oc get pods --all-namespaces | grep vllm
-   ```
-
-### Secret not found
-
-- Ensure the secret is created in the correct namespace
-- Verify secret keys match what's referenced in the CR
-
-## Next Steps
-
-After successful deployment, you can:
-
-1. **Ingest content** into your model using the Llama Stack SDK in a Jupyter notebook
-2. **Create agents** using the Llama Stack API
-3. **Build RAG workflows** with your vector store
-4. **Deploy MongoDB MCP server** for database integration
-
-See the main project README for examples and usage.
+**Ready to begin?** → [Getting Started Guide](docs/01-getting-started.md) 🚀
