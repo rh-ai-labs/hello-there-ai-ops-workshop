@@ -141,8 +141,8 @@ fi
 echo ""
 
 # Build the MCP endpoint URL
-# LlamaStack expects the SSE endpoint for HTTP transport
-MCP_ENDPOINT="${MCP_SERVER_URL}/sse"
+# MongoDB MCP server uses streamable HTTP transport, endpoint is /mcp (not /sse)
+MCP_ENDPOINT="${MCP_SERVER_URL}/mcp"
 
 echo -e "${BLUE}📋 Registration Details:${NC}"
 echo "   Toolgroup ID: ${TOOLGROUP_ID}"
