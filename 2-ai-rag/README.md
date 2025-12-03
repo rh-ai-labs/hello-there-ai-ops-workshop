@@ -55,8 +55,8 @@ This module demonstrates how to use **RAG (Retrieval-Augmented Generation)** wit
 ### Running the Notebooks
 
 Execute notebooks in order:
-1. `notebooks/01_simple_rag_llama_stack_chromadb.ipynb` - Build a basic RAG system
-2. `notebooks/02_multifield_rag_llama_stack_chromadb.ipynb` - Enhance RAG with multi-field indexing
+1. `notebooks/01_introduction_to_rag.ipynb` - Build a basic RAG system
+2. `notebooks/02_advanced_rag_with_multiple_fields.ipynb` - Enhance RAG with multi-field indexing
 
 ---
 
@@ -179,8 +179,8 @@ Execute notebooks in order:
 2-ai-rag/
 ├── README.md              # This file
 ├── notebooks/             # Jupyter notebooks
-│   ├── 01_simple_rag_llama_stack_chromadb.ipynb
-│   └── 02_multifield_rag_llama_stack_chromadb.ipynb
+│   ├── 01_introduction_to_rag.ipynb
+│   └── 02_advanced_rag_with_multiple_fields.ipynb
 ├── data/                  # Datasets
 │   └── synthetic-it-call-center-tickets.csv
 └── src/                   # Source code modules

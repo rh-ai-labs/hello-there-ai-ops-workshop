@@ -161,8 +161,8 @@ This workshop follows design principles inspired by **Apple Genius Bar tutorials
 - ✅ Resultados relevantes e acionáveis
 
 **Notebooks:**
-1. **01_simple_rag_llama_stack_chromadb.ipynb** - Construção de um sistema RAG básico
-2. **02_multifield_rag_llama_stack_chromadb.ipynb** - RAG aprimorado com indexação multi-campo
+1. **01_introduction_to_rag.ipynb** - Construção de um sistema RAG básico
+2. **02_advanced_rag_with_multiple_fields.ipynb** - RAG aprimorado com indexação multi-campo
 
 **Conceitos-chave:**
 - **RAG (Retrieval-Augmented Generation):** Combina recuperação de informações com geração de texto
