@@ -55,57 +55,84 @@ This module demonstrates how to use **RAG (Retrieval-Augmented Generation)** wit
 ### Running the Notebooks
 
 Execute notebooks in order:
-1. `notebooks/01_introduction_to_rag.ipynb` - Build a basic RAG system
-2. `notebooks/02_advanced_rag_with_multiple_fields.ipynb` - Enhance RAG with multi-field indexing
+1. `notebooks/00_data_ingestion.ipynb` - Ingest data into vector stores (single-field or multi-field)
+2. `notebooks/01_introduction_to_rag.ipynb` - Query a basic RAG system with single-field search
+3. `notebooks/02_advanced_rag_with_multiple_fields.ipynb` - Query an advanced RAG system with multi-field search
 
 ---
 
 ## 📚 Notebook Sequence
 
-### Notebook 01: Simple RAG with LlamaStack ✅
+### Notebook 00: Data Ingestion for RAG Systems ✅
+
+**What it does:**
+- Loads IT call center ticket dataset
+- Creates vector stores in LlamaStack (ChromaDB)
+- Prepares documents for indexing (single-field or multi-field mode)
+- Indexes documents into vector stores in batches
+- Verifies ingestion success
+
+**Key Learning Points:**
+- How to prepare data for RAG ingestion
+- How to create vector stores in LlamaStack
+- How to index documents using single-field or multi-field approaches
+- How to verify that ingestion was successful
+
+**Outputs:**
+- Vector store ID for use in query notebooks
+- Indexed documents ready for semantic search
+
+**Time Estimate:** 10-15 minutes
+
+---
+
+### Notebook 01: Introduction to RAG - Semantic Search Basics ✅
 
 **What it does:**
 - Introduces RAG (Retrieval-Augmented Generation) concepts
-- Loads IT call center ticket dataset
-- Creates a vector database (ChromaDB) for semantic search
-- Indexes documents using LlamaStack's RAG tool
+- Connects to a pre-indexed vector store (created in notebook 00)
 - Performs semantic search queries to find similar incidents
 - Uses retrieved context to answer questions about incidents
+
+**Prerequisites:**
+- Complete `00_data_ingestion.ipynb` with `INGESTION_MODE = "single-field"`
 
 **Key Learning Points:**
 - What RAG is and why it's useful for IT operations
 - How vector databases enable semantic search
-- How to index documents for retrieval
 - How to query and retrieve relevant information
 - How to use retrieved context to answer questions
 
 **Outputs:**
-- Vector database with indexed incident tickets
 - Example queries demonstrating semantic search capabilities
+- Understanding of how semantic search works
 
-**Time Estimate:** 45-60 minutes
+**Time Estimate:** 15-20 minutes
 
 ---
 
-### Notebook 02: Multi-Field RAG ✅
+### Notebook 02: Advanced RAG with Multiple Fields ✅
 
 **What it does:**
-- Extends simple RAG with multi-field document indexing
-- Combines multiple ticket fields (`short_description`, `content`, `close_notes`) for richer context
+- Connects to a pre-indexed multi-field vector store (created in notebook 00)
 - Demonstrates why multi-field RAG outperforms single-field RAG
 - Shows practical examples where multi-field indexing improves retrieval quality
+- Compares single-field vs multi-field RAG performance
+
+**Prerequisites:**
+- Complete `00_data_ingestion.ipynb` with `INGESTION_MODE = "multi-field"`
 
 **Key Learning Points:**
 - Why combining multiple fields improves search quality
-- How to structure documents for better retrieval
 - When multi-field RAG is especially powerful
-- How to preserve metadata for filtering
-
-**Outputs:**
-- Enhanced vector database with multi-field documents
+- How multi-field RAG enables finding both problems AND solutions
 - Comparison examples showing single-field vs multi-field results
 
-**Time Estimate:** 45-60 minutes
+**Outputs:**
+- Comparison examples showing single-field vs multi-field results
+- Understanding of when to use multi-field RAG
+
+**Time Estimate:** 15-20 minutes
 
 ---
 
@@ -179,9 +206,11 @@ Execute notebooks in order:
 2-ai-rag/
 ├── README.md              # This file
 ├── notebooks/             # Jupyter notebooks
+│   ├── 00_data_ingestion.ipynb
 │   ├── 01_introduction_to_rag.ipynb
 │   └── 02_advanced_rag_with_multiple_fields.ipynb
 ├── data/                  # Datasets
+│   ├── synthetic-it-call-center-tickets-sample.csv
 │   └── synthetic-it-call-center-tickets.csv
 └── src/                   # Source code modules
     └── __init__.py
@@ -192,11 +221,9 @@ Execute notebooks in order:
 ## 📈 Current Status
 
 **Completed:**
-- ✅ Notebook 01: Simple RAG with LlamaStack
-- ✅ Notebook 02: Multi-Field RAG
-
-**In Progress:**
-- 🔄 Refactoring notebooks to align with workshop guidelines
+- ✅ Notebook 00: Data Ingestion for RAG Systems
+- ✅ Notebook 01: Introduction to RAG - Semantic Search Basics
+- ✅ Notebook 02: Advanced RAG with Multiple Fields
 
 ---
 
