@@ -76,6 +76,8 @@ mlartifacts/
 !**/data/.gitkeep
 # Module 1: Small example dataset
 !**/1-ai-fundamentals/data/play_tennis.csv
+# Module 2: RAG datasets
+!**/2-ai-rag/data/*.csv
 
 # Temporary files
 *.tmp
