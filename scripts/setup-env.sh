@@ -112,7 +112,7 @@ fi
 
 # Get model (always reset to defaults - ignore existing env vars)
 MODEL="vllm-inference/llama-32-3b-instruct"
-OPENAI_MODEL="RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic"
+OPENAI_MODEL="vllm-inference/llama-32-3b-instruct"
 
 # Detect vLLM API Base URL (always reset - ignore existing env vars)
 if [ "$INSIDE_CLUSTER" = true ]; then

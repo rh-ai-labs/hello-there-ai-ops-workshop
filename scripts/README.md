@@ -232,7 +232,7 @@ LLAMA_STACK_URL=https://llamastack-route-my-first-model.apps.ocp.example.com
 MCP_MONGODB_URL=https://mongodb-mcp-server-my-first-model.apps.ocp.example.com
 VLLM_API_BASE=https://vllm-predictor-route-my-first-model.apps.ocp.example.com/v1
 LLAMA_MODEL=vllm-inference/llama-32-3b-instruct
-OPENAI_MODEL=RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic
+OPENAI_MODEL=vllm-inference/llama-32-3b-instruct
 NAMESPACE=my-first-model
 ```
 

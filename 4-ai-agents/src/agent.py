@@ -52,7 +52,7 @@ If you're unsure about an action, explain your reasoning."""
         tool_registry: ToolRegistry,
         memory: Optional[AgentMemory] = None,
         llamastack_url: Optional[str] = None,
-        model: str = os.getenv("LLAMA_MODEL", "openai/RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic"),
+        model: str = os.getenv("LLAMA_MODEL", "openai/vllm-inference/llama-32-3b-instruct"),
         instructions: Optional[str] = None,
         verbose: bool = True
     ):
@@ -63,7 +63,7 @@ If you're unsure about an action, explain your reasoning."""
             tool_registry: Registry containing available tools
             memory: Optional memory system for learning
             llamastack_url: URL of llamastack server (default: http://localhost:8321)
-            model: Model identifier (default: openai/RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic)
+            model: Model identifier (default: openai/vllm-inference/llama-32-3b-instruct)
             instructions: Custom agent instructions (uses default if not provided)
             verbose: Whether to print detailed execution logs
         """

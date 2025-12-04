@@ -54,7 +54,7 @@ MODEL = os.getenv("LLAMA_MODEL", "vllm-inference/llama-32-3b-instruct")
 NAMESPACE = os.getenv("NAMESPACE", "my-first-model")
 MCP_MONGODB_URL = os.getenv("MCP_MONGODB_URL", "").rstrip("/")
 VLLM_API_BASE = os.getenv("VLLM_API_BASE", "").rstrip("/")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "vllm-inference/llama-32-3b-instruct")
 INSIDE_CLUSTER = is_inside_openshift()
 
 # Auto-detect URLs if not explicitly set
