@@ -102,16 +102,36 @@ fi
 echo -e "${GREEN}✅ LlamaStack route: ${LLAMASTACK_ROUTE}${NC}"
 
 # Get MCP server URL
-# IMPORTANT: LlamaStack runs inside the cluster, so it should use the internal service URL
+# IMPORTANT: LlamaStack runs inside the cluster, so it MUST use the internal service URL
 # The external route may not be accessible from within the cluster or may have TLS issues
+# Service URL is more reliable and doesn't require external routing
+
+# Check if user explicitly wants to use route (not recommended)
 USE_SERVICE_URL="${USE_SERVICE_URL:-true}"
 
-if [ "$USE_SERVICE_URL" = "true" ]; then
-    echo -e "${BLUE}🔍 Using internal service URL for MCP server (LlamaStack runs in-cluster)...${NC}"
-    MCP_SERVER_URL="http://mongodb-mcp-server.${NAMESPACE}.svc.cluster.local:3000"
-    echo -e "${GREEN}✅ Using service URL: ${MCP_SERVER_URL}${NC}"
+if [ "$USE_SERVICE_URL" != "false" ]; then
+    # Use service URL (default and recommended)
+    echo -e "${BLUE}🔍 Using internal service URL for MCP server${NC}"
+    echo -e "${CYAN}   (LlamaStack runs in-cluster, so service URL is required)${NC}"
+    
+    # Verify service exists
+    if oc get svc mongodb-mcp-server -n "${NAMESPACE}" &>/dev/null; then
+        # Get the service port (default to 3000)
+        MCP_PORT=$(oc get svc mongodb-mcp-server -n "${NAMESPACE}" -o jsonpath='{.spec.ports[0].port}' 2>/dev/null || echo "3000")
+        MCP_SERVER_URL="http://mongodb-mcp-server.${NAMESPACE}.svc.cluster.local:${MCP_PORT}"
+        echo -e "${GREEN}✅ Using service URL: ${MCP_SERVER_URL}${NC}"
+    else
+        echo -e "${RED}❌ MongoDB MCP server service not found${NC}"
+        echo "   Service name: mongodb-mcp-server"
+        echo "   Namespace: ${NAMESPACE}"
+        echo ""
+        echo "   Please ensure the MongoDB MCP server is deployed:"
+        echo "   ./scripts/deploy-mongodb-mcp.sh"
+        exit 1
+    fi
 else
-    # Use external route (for testing from outside cluster)
+    # Use external route (only if explicitly requested, not recommended)
+    echo -e "${YELLOW}⚠️  Using external route (not recommended for in-cluster LlamaStack)${NC}"
     if [ -z "$MCP_SERVER_ROUTE" ] || [ "$MCP_SERVER_ROUTE" = "mongodb-mcp-server-my-first-model.apps.ocp.5pndc.sandbox5432.opentlc.com" ]; then
         echo -e "${BLUE}🔍 Discovering MongoDB MCP server route...${NC}"
         MCP_SERVER_ROUTE=$(oc get route mongodb-mcp-server -n "${NAMESPACE}" -o jsonpath='{.spec.host}' 2>/dev/null || echo "")
@@ -132,11 +152,19 @@ echo ""
 
 # Check if MCP server is accessible
 echo -e "${BLUE}🔍 Checking MCP server accessibility...${NC}"
-if curl -s -f "${MCP_SERVER_URL}/health" > /dev/null 2>&1 || curl -s -f "${MCP_SERVER_URL}" > /dev/null 2>&1; then
-    echo -e "${GREEN}✅ MCP server is accessible${NC}"
+if echo "$MCP_SERVER_URL" | grep -q "\.svc\.cluster\.local"; then
+    # Service URL - can only be accessed from inside cluster
+    echo -e "${CYAN}   Service URL detected - accessibility check skipped${NC}"
+    echo -e "${CYAN}   (Service URLs are only accessible from inside the cluster)${NC}"
+    echo -e "${CYAN}   LlamaStack will be able to access it from within the cluster${NC}"
 else
-    echo -e "${YELLOW}⚠️  Could not verify MCP server accessibility${NC}"
-    echo "   Continuing anyway..."
+    # Route URL - can be checked from outside
+    if curl -s -f -k "${MCP_SERVER_URL}/health" > /dev/null 2>&1 || curl -s -f -k "${MCP_SERVER_URL}" > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ MCP server is accessible${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Could not verify MCP server accessibility${NC}"
+        echo "   Continuing anyway (may be accessible from within cluster)..."
+    fi
 fi
 echo ""
 
