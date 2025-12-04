@@ -72,11 +72,8 @@ get_service_url() {
     echo "http://${service_name}.${namespace}.svc.cluster.local:${port}"
 }
 
-# Detect LlamaStack URL
-# Check if already set in environment first
-if [ -n "${LLAMA_STACK_URL:-}" ]; then
-    echo -e "${GREEN}✅ Using LLAMA_STACK_URL from environment${NC}"
-elif [ "$INSIDE_CLUSTER" = true ]; then
+# Detect LlamaStack URL (always reset - ignore existing env vars)
+if [ "$INSIDE_CLUSTER" = true ]; then
     # Inside cluster: use service URL
     LLAMA_STACK_URL=$(get_service_url "lsd-llama-milvus-inline-service" "$NAMESPACE" "8321")
     echo -e "${GREEN}✅ Detected LlamaStack service URL${NC}"
@@ -89,19 +86,13 @@ else
         echo -e "${RED}❌ Could not detect LlamaStack route${NC}"
         echo -e "${YELLOW}⚠️  Please set LLAMA_STACK_URL manually${NC}"
         echo "   💡 Get route URL: oc get route llamastack-route -n $NAMESPACE -o jsonpath='{.spec.host}'"
-        echo "   💡 Then set: export LLAMA_STACK_URL='https://<route-host>'"
-        LLAMA_STACK_URL="${LLAMA_STACK_URL:-}"
+        echo "   💡 Or use port-forwarding: export LLAMA_STACK_URL='http://localhost:8321'"
+        LLAMA_STACK_URL=""
     fi
 fi
 
-# Ensure LLAMA_STACK_URL is set (use empty string if not detected)
-LLAMA_STACK_URL="${LLAMA_STACK_URL:-}"
-
-# Detect MongoDB MCP URL
-# Check if already set in environment first
-if [ -n "${MCP_MONGODB_URL:-}" ]; then
-    echo -e "${GREEN}✅ Using MCP_MONGODB_URL from environment${NC}"
-elif [ "$INSIDE_CLUSTER" = true ]; then
+# Detect MongoDB MCP URL (always reset - ignore existing env vars)
+if [ "$INSIDE_CLUSTER" = true ]; then
     # Inside cluster: use service URL
     MCP_MONGODB_URL=$(get_service_url "mongodb-mcp-server" "$NAMESPACE" "3000")
     echo -e "${GREEN}✅ Detected MongoDB MCP service URL${NC}"
@@ -115,22 +106,16 @@ else
         echo -e "${GREEN}✅ Detected MongoDB MCP route URL${NC}"
     else
         echo -e "${YELLOW}⚠️  Could not detect MongoDB MCP route (optional)${NC}"
-        MCP_MONGODB_URL="${MCP_MONGODB_URL:-}"
+        MCP_MONGODB_URL=""
     fi
 fi
 
-# Ensure MCP_MONGODB_URL is set (use empty string if not detected)
-MCP_MONGODB_URL="${MCP_MONGODB_URL:-}"
+# Get model (always reset to defaults - ignore existing env vars)
+MODEL="vllm-inference/llama-32-3b-instruct"
+OPENAI_MODEL="RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic"
 
-# Get model (from env or default)
-MODEL="${LLAMA_MODEL:-vllm-inference/llama-32-3b-instruct}"
-OPENAI_MODEL="${OPENAI_MODEL:-RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic}"
-
-# Detect vLLM API Base URL
-# Check if already set in environment first
-if [ -n "${VLLM_API_BASE:-}" ]; then
-    echo -e "${GREEN}✅ Using VLLM_API_BASE from environment${NC}"
-elif [ "$INSIDE_CLUSTER" = true ]; then
+# Detect vLLM API Base URL (always reset - ignore existing env vars)
+if [ "$INSIDE_CLUSTER" = true ]; then
     # Inside cluster: try to find vLLM predictor service
     VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" 2>/dev/null | grep -i predictor | awk '{print $1}' | head -1 || echo "")
     if [ -z "$VLLM_SERVICE" ]; then
@@ -311,5 +296,6 @@ elif [[ "$VLLM_API_BASE" == http://*.svc.cluster.local* ]] && [ "$INSIDE_CLUSTER
     echo ""
 fi
 
-echo "💡 To override any value, edit $ENV_FILE or set environment variables"
-echo "💡 Example: export LLAMA_STACK_URL='https://custom-url.com' && $0"
+echo "💡 To override any value, edit $ENV_FILE directly"
+echo "💡 This script always resets all variables - it does not preserve existing env vars"
+echo "💡 To use custom values, edit $ENV_FILE after running this script"
