@@ -79,12 +79,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Note: trustyai is currently incompatible with pandas>=2.0.0
-# trustyai requires pandas<1.6, but this project uses pandas>=2.0.0
-# If you need trustyai, you'll need to use pandas 1.5.x or wait for trustyai to support pandas 2.0+
-# trustyai = [
-#     "trustyai>=0.3.0",
-# ]
 langfuse = [
     "langfuse>=2.0.0",  # Optional: Langfuse for LLM observability
 ]

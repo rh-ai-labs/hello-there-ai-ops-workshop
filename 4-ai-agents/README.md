@@ -50,14 +50,13 @@ pip install duckduckgo-search termcolor fire
 
 ## Notebooks Overview
 
-This module contains 6 notebooks that progressively build your understanding of autonomous agents:
+This module contains 5 notebooks that progressively build your understanding of autonomous agents:
 
 1. **01_introduction_to_agents.ipynb** - Introduction to agents, their components, and basic concepts
 2. **02_building_simple_agent.ipynb** - Build a simple agent with tools and memory
 3. **03_llamastack_core_features.ipynb** - Explore LlamaStack's core features: Chat and RAG
 4. **04_mcp_tools.ipynb** - Learn about MCP (Model Context Protocol) and create custom tools
-5. **05_safety_shields.ipynb** - Implement safety shields and content moderation
-6. **06_multi_metric_evaluation.ipynb** - Evaluate agents using multiple metrics including LLM-as-a-Judge
+5. **05_multi_metric_evaluation.ipynb** - Evaluate agents using multiple metrics including LLM-as-a-Judge
 
 ## Running the Notebooks
 
@@ -137,7 +136,6 @@ The `src/` directory contains:
 - **Tools:** Functions that agents can call to interact with the world
 - **Memory:** Short-term and long-term memory for agents
 - **MCP (Model Context Protocol):** Standardized protocol for tool integration
-- **Safety Shields:** Content moderation and safety checks
 - **Multi-metric Evaluation:** Evaluating agents using multiple criteria
 
 ## Notes
