@@ -259,8 +259,16 @@ else
     fi
 fi
 
-# Ensure VLLM_API_BASE is set (use empty string if not detected)
-VLLM_API_BASE="${VLLM_API_BASE:-}"
+# Ensure VLLM_API_BASE is set (use default fallback if not detected)
+if [ -z "$VLLM_API_BASE" ]; then
+    # Default fallback: use standard predictor service name and namespace
+    DEFAULT_SERVICE="llama-32-3b-instruct-predictor"
+    DEFAULT_PORT="80"
+    VLLM_API_BASE="http://${DEFAULT_SERVICE}.${NAMESPACE}.svc.cluster.local:${DEFAULT_PORT}/v1"
+    echo -e "${YELLOW}⚠️  Using default vLLM API Base URL: $VLLM_API_BASE${NC}"
+    echo -e "${YELLOW}   💡 If this is incorrect, edit .env file or ensure the service is deployed${NC}"
+    echo -e "${YELLOW}   💡 Note: Port 80 is default, but vLLM typically uses port 8080${NC}"
+fi
 
 # Generate .env file
 echo ""
