@@ -115,105 +115,147 @@ MODEL="vllm-inference/llama-32-3b-instruct"
 OPENAI_MODEL="vllm-inference/llama-32-3b-instruct"
 
 # Detect vLLM API Base URL (always reset - ignore existing env vars)
+# Check if oc command is available
+OC_AVAILABLE=false
+if command -v oc &> /dev/null && oc whoami &> /dev/null; then
+    OC_AVAILABLE=true
+fi
+
 if [ "$INSIDE_CLUSTER" = true ]; then
     # Inside cluster: try to find vLLM predictor service
-    VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" 2>/dev/null | grep -i predictor | awk '{print $1}' | head -1 || echo "")
-    if [ -z "$VLLM_SERVICE" ]; then
-        # Try specific service name patterns
-        for svc_name in "llama-32-3b-instruct-predictor" "llama-*-predictor"; do
-            if oc get svc "$svc_name" -n "$NAMESPACE" &>/dev/null; then
-                VLLM_SERVICE="$svc_name"
-                break
-            fi
-        done
+    VLLM_SERVICE=""
+    if [ "$OC_AVAILABLE" = true ]; then
+        # Strategy 1: Use jsonpath to find predictor services
+        VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" -o jsonpath='{.items[?(@.metadata.name=~".*predictor.*")].metadata.name}' 2>/dev/null | head -1 || echo "")
+        
+        # Strategy 2: Fallback to grep if jsonpath fails
+        if [ -z "$VLLM_SERVICE" ]; then
+            VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" 2>/dev/null | grep -i predictor | awk '{print $1}' | head -1 || echo "")
+        fi
+        
+        # Strategy 3: Try specific known service names
+        if [ -z "$VLLM_SERVICE" ]; then
+            for svc_name in "llama-32-3b-instruct-predictor"; do
+                if oc get svc "$svc_name" -n "$NAMESPACE" &>/dev/null; then
+                    VLLM_SERVICE="$svc_name"
+                    break
+                fi
+            done
+        fi
     fi
+    
     if [ -n "$VLLM_SERVICE" ]; then
-        VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].port}' 2>/dev/null || echo "80")
+        # Get port (prefer 8080, fallback to first port, then default to 8080)
+        VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[?(@.targetPort==8080 || @.port==8080)].targetPort}' 2>/dev/null || echo "")
+        if [ -z "$VLLM_PORT" ] || [ "$VLLM_PORT" = "null" ]; then
+            VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].targetPort}' 2>/dev/null || echo "")
+        fi
+        if [ -z "$VLLM_PORT" ] || [ "$VLLM_PORT" = "null" ]; then
+            VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].port}' 2>/dev/null || echo "8080")
+        fi
         VLLM_API_BASE="http://${VLLM_SERVICE}.${NAMESPACE}.svc.cluster.local:${VLLM_PORT}/v1"
-        echo -e "${GREEN}✅ Detected vLLM service URL${NC}"
+        echo -e "${GREEN}✅ Detected vLLM service URL: $VLLM_API_BASE${NC}"
     else
         echo -e "${RED}❌ Could not detect vLLM service - REQUIRED for Module 3${NC}"
+        if [ "$OC_AVAILABLE" = false ]; then
+            echo -e "${YELLOW}   💡 oc command not available or not authenticated${NC}"
+        else
+            echo -e "${YELLOW}   💡 Make sure the predictor service is deployed${NC}"
+            echo -e "${YELLOW}   💡 Check: oc get svc -n $NAMESPACE | grep predictor${NC}"
+        fi
         VLLM_API_BASE=""
     fi
 else
     # Outside cluster: try to find vLLM route
-    # First, find the predictor service (try multiple methods)
-    VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" -o jsonpath='{.items[?(@.metadata.name=~".*predictor.*")].metadata.name}' 2>/dev/null | head -1 || echo "")
+    VLLM_SERVICE=""
+    VLLM_ROUTE=""
     
-    # Fallback: try grep if jsonpath fails
-    if [ -z "$VLLM_SERVICE" ]; then
-        VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" 2>/dev/null | grep -i predictor | awk '{print $1}' | head -1 || echo "")
-    fi
-    
-    # Fallback: try specific service name pattern
-    if [ -z "$VLLM_SERVICE" ]; then
-        # Try common service name patterns
-        for svc_name in "llama-32-3b-instruct-predictor" "llama-*-predictor" "*-predictor"; do
-            if oc get svc "$svc_name" -n "$NAMESPACE" &>/dev/null; then
-                VLLM_SERVICE="$svc_name"
-                break
-            fi
-        done
-    fi
-    
-    if [ -z "$VLLM_SERVICE" ]; then
-        echo -e "${RED}❌ Could not find vLLM predictor service${NC}"
-        echo -e "${YELLOW}   💡 Make sure the predictor service is deployed${NC}"
-        echo -e "${YELLOW}   💡 Check: oc get svc -n $NAMESPACE | grep predictor${NC}"
-        VLLM_API_BASE=""
-    else
-        # Try multiple strategies to find the route
-        VLLM_ROUTE=""
+    if [ "$OC_AVAILABLE" = true ]; then
+        # First, find the predictor service (try multiple methods)
+        # Strategy 1: Use jsonpath to find predictor services
+        VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" -o jsonpath='{.items[?(@.metadata.name=~".*predictor.*")].metadata.name}' 2>/dev/null | head -1 || echo "")
         
-        # Strategy 1: Find route that points to the predictor service
-        VLLM_ROUTE=$(oc get route -n "$NAMESPACE" -o jsonpath="{.items[?(@.spec.to.name==\"$VLLM_SERVICE\")].spec.host}" 2>/dev/null | head -1 || echo "")
-        
-        # Strategy 2: Find route by name pattern (using grep since jsonpath regex may not work)
-        if [ -z "$VLLM_ROUTE" ]; then
-            VLLM_ROUTE=$(oc get route -n "$NAMESPACE" 2>/dev/null | grep -iE "predictor|inference|vllm" | awk '{print $2}' | head -1 || echo "")
+        # Strategy 2: Fallback to grep if jsonpath fails
+        if [ -z "$VLLM_SERVICE" ]; then
+            VLLM_SERVICE=$(oc get svc -n "$NAMESPACE" 2>/dev/null | grep -i predictor | awk '{print $1}' | head -1 || echo "")
         fi
         
-        # Strategy 3: Try common route naming patterns
-        if [ -z "$VLLM_ROUTE" ]; then
-            SERVICE_BASE=$(echo "$VLLM_SERVICE" | sed 's/-predictor$//' | sed 's/-service$//')
-            for route_pattern in "${SERVICE_BASE}-route" "${SERVICE_BASE}" "vllm-route" "predictor-route"; do
-                if route_url=$(get_route_url "$route_pattern" "$NAMESPACE" 2>/dev/null); then
-                    VLLM_ROUTE="${route_url#https://}"
+        # Strategy 3: Try specific known service names
+        if [ -z "$VLLM_SERVICE" ]; then
+            for svc_name in "llama-32-3b-instruct-predictor"; do
+                if oc get svc "$svc_name" -n "$NAMESPACE" &>/dev/null; then
+                    VLLM_SERVICE="$svc_name"
                     break
                 fi
             done
         fi
         
-        if [ -n "$VLLM_ROUTE" ]; then
-            VLLM_API_BASE="https://${VLLM_ROUTE}/v1"
-            echo -e "${GREEN}✅ Detected vLLM route URL${NC}"
-        else
-            # No route found - try to use service URL as fallback
-            VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].port}' 2>/dev/null || echo "80")
+        if [ -n "$VLLM_SERVICE" ]; then
+            # Try multiple strategies to find the route
+            # Strategy 1: Find route that points to the predictor service
+            VLLM_ROUTE=$(oc get route -n "$NAMESPACE" -o jsonpath="{.items[?(@.spec.to.name==\"$VLLM_SERVICE\")].spec.host}" 2>/dev/null | head -1 || echo "")
             
-            # Check if we can use service URL (inside cluster or if port-forwarding)
-            if [ "$INSIDE_CLUSTER" = true ]; then
-                # Inside cluster: use service URL directly
-                VLLM_API_BASE="http://${VLLM_SERVICE}.${NAMESPACE}.svc.cluster.local:${VLLM_PORT}/v1"
-                echo -e "${GREEN}✅ Using vLLM service URL (inside cluster)${NC}"
-            else
-                # Outside cluster: try service URL (works if port-forwarding or VPN)
-                # But also provide route creation instructions
-                SERVICE_URL="http://${VLLM_SERVICE}.${NAMESPACE}.svc.cluster.local:${VLLM_PORT}/v1"
-                echo -e "${YELLOW}⚠️  No vLLM route found - using service URL${NC}"
-                echo -e "${YELLOW}   Service URL: $SERVICE_URL${NC}"
-                echo -e "${YELLOW}   💡 Note: Service URL only works inside cluster or with port-forwarding${NC}"
-                echo -e "${YELLOW}   💡 For external access, create a route:${NC}"
-                echo -e "${BLUE}      oc create route edge vllm-predictor-route \\${NC}"
-                echo -e "${BLUE}        --service=$VLLM_SERVICE \\${NC}"
-                echo -e "${BLUE}        --port=$VLLM_PORT \\${NC}"
-                echo -e "${BLUE}        -n $NAMESPACE${NC}"
-                echo -e "${YELLOW}   Or use port-forwarding:${NC}"
-                echo -e "${BLUE}      oc port-forward svc/$VLLM_SERVICE $VLLM_PORT:$VLLM_PORT -n $NAMESPACE${NC}"
-                echo -e "${BLUE}      Then use: http://localhost:$VLLM_PORT/v1${NC}"
-                VLLM_API_BASE="$SERVICE_URL"
+            # Strategy 2: Find route by name pattern using jsonpath
+            if [ -z "$VLLM_ROUTE" ]; then
+                VLLM_ROUTE=$(oc get route -n "$NAMESPACE" -o jsonpath='{.items[?(@.metadata.name=~".*predictor.*|.*inference.*|.*vllm.*")].spec.host}' 2>/dev/null | head -1 || echo "")
+            fi
+            
+            # Strategy 3: Find route by name pattern using grep (more reliable for hostname extraction)
+            if [ -z "$VLLM_ROUTE" ]; then
+                # Get route name first, then extract hostname
+                ROUTE_NAME=$(oc get route -n "$NAMESPACE" 2>/dev/null | grep -iE "predictor|inference|vllm" | awk '{print $1}' | head -1 || echo "")
+                if [ -n "$ROUTE_NAME" ]; then
+                    VLLM_ROUTE=$(oc get route "$ROUTE_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.host}' 2>/dev/null || echo "")
+                fi
+            fi
+            
+            # Strategy 4: Try common route naming patterns
+            if [ -z "$VLLM_ROUTE" ]; then
+                SERVICE_BASE=$(echo "$VLLM_SERVICE" | sed 's/-predictor$//' | sed 's/-service$//')
+                for route_pattern in "${SERVICE_BASE}-route" "${SERVICE_BASE}" "vllm-route" "predictor-route" "vllm-predictor-route"; do
+                    if route_url=$(get_route_url "$route_pattern" "$NAMESPACE" 2>/dev/null); then
+                        VLLM_ROUTE="${route_url#https://}"
+                        break
+                    fi
+                done
             fi
         fi
+    fi
+    
+    if [ -z "$VLLM_SERVICE" ]; then
+        echo -e "${RED}❌ Could not find vLLM predictor service${NC}"
+        if [ "$OC_AVAILABLE" = false ]; then
+            echo -e "${YELLOW}   💡 oc command not available or not authenticated${NC}"
+        else
+            echo -e "${YELLOW}   💡 Make sure the predictor service is deployed${NC}"
+            echo -e "${YELLOW}   💡 Check: oc get svc -n $NAMESPACE | grep predictor${NC}"
+        fi
+        VLLM_API_BASE=""
+    elif [ -n "$VLLM_ROUTE" ]; then
+        VLLM_API_BASE="https://${VLLM_ROUTE}/v1"
+        echo -e "${GREEN}✅ Detected vLLM route URL: $VLLM_API_BASE${NC}"
+    else
+        # No route found - use service URL as fallback (works with port-forwarding)
+        VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[?(@.targetPort==8080 || @.port==8080)].targetPort}' 2>/dev/null || echo "")
+        if [ -z "$VLLM_PORT" ] || [ "$VLLM_PORT" = "null" ]; then
+            VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].targetPort}' 2>/dev/null || echo "")
+        fi
+        if [ -z "$VLLM_PORT" ] || [ "$VLLM_PORT" = "null" ]; then
+            VLLM_PORT=$(oc get svc "$VLLM_SERVICE" -n "$NAMESPACE" -o jsonpath='{.spec.ports[0].port}' 2>/dev/null || echo "8080")
+        fi
+        SERVICE_URL="http://${VLLM_SERVICE}.${NAMESPACE}.svc.cluster.local:${VLLM_PORT}/v1"
+        VLLM_API_BASE="$SERVICE_URL"
+        echo -e "${YELLOW}⚠️  No vLLM route found - using service URL${NC}"
+        echo -e "${YELLOW}   Service URL: $SERVICE_URL${NC}"
+        echo -e "${YELLOW}   💡 Note: Service URL only works inside cluster or with port-forwarding${NC}"
+        echo -e "${YELLOW}   💡 For external access, create a route:${NC}"
+        echo -e "${BLUE}      oc create route edge vllm-predictor-route \\${NC}"
+        echo -e "${BLUE}        --service=$VLLM_SERVICE \\${NC}"
+        echo -e "${BLUE}        --port=$VLLM_PORT \\${NC}"
+        echo -e "${BLUE}        -n $NAMESPACE${NC}"
+        echo -e "${YELLOW}   Or use port-forwarding:${NC}"
+        echo -e "${BLUE}      oc port-forward svc/$VLLM_SERVICE $VLLM_PORT:$VLLM_PORT -n $NAMESPACE${NC}"
+        echo -e "${BLUE}      Then use: http://localhost:$VLLM_PORT/v1${NC}"
     fi
 fi
 
